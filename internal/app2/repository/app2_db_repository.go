@@ -11,7 +11,7 @@ import (
 )
 
 func createDbConnection() *sql.DB  {
-	datasourceUrl := os.Getenv("APP1_DATASOURCE_URL")
+	datasourceUrl := os.Getenv("APP2_DATASOURCE_URL")
 	fmt.Println(datasourceUrl)
 	db, err := sql.Open("postgres", datasourceUrl)
 

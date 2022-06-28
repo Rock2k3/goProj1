@@ -1,8 +1,6 @@
 package httpServer
 
 import (
-	"app2/repository"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,7 +9,6 @@ import (
 
 func Run(addr string)  {
 	http.HandleFunc("/health_check", healthCheck)
-	http.HandleFunc("/users", getAllUsers)
 
 	srv := &http.Server{
 		Addr: addr,
@@ -27,20 +24,6 @@ func healthCheck (w http.ResponseWriter, r *http.Request)  {
 	_, err := fmt.Fprintf(w, "Ok")
 	if err != nil {
 		return
-	}
-}
-
-func getAllUsers(w http.ResponseWriter, r *http.Request)   {
-	log.Println("getAllUsers")
-
-	users, err := repository.GetUsers()
-	if err != nil {
-		return
-	}
-
-	err = json.NewEncoder(w).Encode(users)
-	if err != nil {
-		return 
 	}
 }
 
