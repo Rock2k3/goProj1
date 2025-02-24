@@ -1,0 +1,602 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  automated_capability:
+    # Схема данных объектов сущности
+    schema:
+      $defs:
+        status:
+          title: Статус ЖЦ
+          description: >
+            \n
+            Статус жизненного цикла объекта (BBB, интерфейс, сценарий и т.д.). Он имеет одно из следующих значений:\n
+
+            1. Планирование - объект только запланирован и его проектирование не начато.\n
+
+            2. Проектирование - объект находится в статусе проектирования. Разработка на прикладном уровне еще не началась.\n
+
+            3. Разработка - идет разработка на прикладном уровне (АС, код, API, топики и прочее). Есть Story в бэклоге ответственных команд, которые находятся в работе.\n
+
+            4. Эксплуатация - в промышленную эксплуатацию выведена любая часть функциональности объекта. Например, BBB генерирует Health-check события в систему мониторинга CL.\n
+
+            5. Выведение - объект выводится из эксплуатации. Все его потребители должны учесть и отказаться от взаимодействия с ним в ближайшее время.\n
+
+            6. Выведен - объект выведен из эксплуатации либо от него отказались на этапе планирования, проектирования или разработки.\n
+          enum:
+            - Планирование
+            - Проектирование
+            - Разработка
+            - Эксплуатация
+            - Выведение
+            - Выведен
+          default: Планирование
+        ## Описываем типы для API и интеграций
+        #
+        business_api:
+          type: object
+          properties:
+            api_type:
+              title: Тип интерфейса
+              enum:
+                - business_event
+                - getter
+                - setter
+              description: >
+                \n
+                Типы интерфейсов:
+                \n
+                * business_event - события о появлении определенного бизнес значимого факта. К примеру, вход клиента в личный кабинет, или появление в ЕПК новой карточки клиента.
+                \n
+                * getter - Данный набор API предназначен для: \n
+                  1. Получения объектов (данных), которыми эксклюзивно владеет BBB \n
+                  2. Поиск по данным, которыми эксклюзивно владеет BBB \n
+                  3. Получение, ранее опубликованных посредством Business, или Activity событий, расчетов/результатов по зафиксированным идентификаторам \n
+                  4. Получение статуса исполнения бизнес-сценария по коду сценария (scenario) из события в привязке к дополнительным идентификаторам (ЕПК_ID, ClientRequestID, Deal_ID, либо по коду родительского сценария) 
+                \n
+                * setter - Данный набор API предназначен для создания/редактирования и удаления данных, которыми эксклюзивно владеет данный BBB. 
+                Внутри BBB при вызовах такого рода API могут запускаться процессы верификации данных с ведением соответствующих статусов создаваемых/редактируемых объектов, 
+                согласно моделям, описанным в архитектуре BBB. Процесс управления данными сопровождается публикацией соответствующих Business или 
+                Activity событий по мере изменения статусов объектов для нотификации потребителей об изменениях, происходящих в BBB.
+                \n
+            id:
+              type: string
+              pattern: ^[a-zA-Z_0-9]*$
+              description: >
+                \n
+                Произвольный идентификатор бизнес API, уникальный в рамках текущего BBB.
+                Необходим для ссылки на Интерфейс и может состоять из:
+                * английских букв: a-z или A-Z
+                * цифр: 0-9
+                * нижнего подчеркивания: _
+                \n
+                * Значение этого атрибута отражается:
+                \n
+                * в поле body.type в сообщении business-события
+                \n
+                * в тегах OpenAPI спецификации для связи бизнес API с прикладными
+                \n
+            business_entity:
+              title: Бизнес-сущность
+              description: >
+                \n
+                Бизнес-сущность, с которой связан данный бизнес API:
+                \n
+                Необходимо указать идентификатор бизнес-сущности из раздела business_entities текущей карточки BBB.
+              type: string
+            title:
+              title: Название
+              type: string
+              description: >
+                \n
+                Название интерфейса должно быть уникальным в рамках текущего BBB и четко отражать бизнес-смысл данного API или события.
+            description:
+              title: Описание
+              type: string
+              description: >
+                \n
+                Более подробное описание API или события, которое может включать в себя разные подробности и другую вспомогательную информацию.
+            schemaURL:
+              title: Ссылка написание схемы API/События
+              description: >
+                \n
+                Описание схемы API или события должно быть опубликовано в общедоступном реестре.\n
+                Если данному бизнес интерфейсу соответствует только одна схема, то указываем одним URL. Если схем несколько, то указываем их массивом: URL и заголовок.\n
+                Для API обязательна Swagger спецификация, для События - AsyncAPI.\n
+                Схемы могут быть размещены на следующих ресурсах:\n
+                * META.Hub - https://sudir.sigma.sbrf.ru/meta/hub/\n
+                * API Studio - https://apistudio.sigma.sbrf.ru/ (обязательно публичный проект)\n
+                * Confluence - https://confluence.sberbank.ru/ (обязательно публичный доступ к странице)\n
+              type: string
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                      url:
+                        type: string
+                    required:
+                      - title
+                      - url
+            status:
+              $ref: "#/$defs/status"
+          required:
+            - id
+            - title
+            - api_type
+            - business_entity
+            - status
+        integration_business_api:
+          type: object
+          properties:
+            source:
+              title: BBB-источник
+              $ref: "#/$rels/automated_capability.automated_capability"
+              description: |
+
+                BBB, который является поставщиком API или событий для данной интеграции.
+            source_business_api:
+              title: Бизнес API BBB-источника (для setter, getter или business-event)
+              type: string
+              description: |
+
+                Бизнес API Источника, которое потребляется в рамках данной интеграции. Не заполняется для интеграции с activity-событиями.
+            title:
+              title: Название (опционально)
+              type: string
+              description: |
+                /n
+                Краткое описание данной интеграции. Является необязательным полем и /n
+                заполняется либо для пояснения сценария использования стороннего бизнес API, /n
+                либо если бизнес API на стороне поставщика не определен. /n
+            description:
+              title: Описание (опционально)
+              type: string
+              description: |
+                /n
+                Подробное описание данной интеграции, если требуется.
+            status:
+              $ref: "#/$defs/status"
+          additionalProperties: false
+          required:
+            - source
+          anyOf:
+            - required:
+                - source_business_api
+            - required:
+                - title
+        integration_activity:
+          type: object
+          properties:
+            source:
+              title: BBB-источник
+              $ref: "#/$rels/automated_capability.automated_capability"
+              description: |
+                
+                Сторонний BBB, который является поставщиком API или событий для данной интеграции.
+            source_scenario:
+              title: Бизнес-сценарий BBB-источника (только для activity-event)
+              description: |
+
+                Требуется для описания интеграции с activity-событиями сценариев BBB. Укажите конкретный сценарий, /n
+                чьи activity-события вы планируете обрабатывать.
+              type: string
+            source_activity_type:
+              title: Тип activity-события сценария (только для activity-event)
+              description: |
+
+                Требуется для описания интеграции с activity-событиями сценариев BBB. Укажите тип activity-события, /n
+                который вы хотите обрабатывать.
+              enum:
+                - ACTIVITY_INIT
+                - ACTIVITY_IN_ACTION
+                - ACTIVITY_STATE
+                - ACTIVITY_STATE_SLA
+                - ACTIVITY_RESULT
+                - ACTIVITY_ERRORS
+                - ACTIVITY_EXECUTE_SCENARIO_FAILED
+                - ACTIVITY_BRANCHED
+                - ACTIVITY_MERGED
+            source_scenario_state:
+              title: Статус сценария (только для activity-event)
+              description: |
+
+                Требуется для описания интеграции с activity-событиями сценариев BBB. Укажите тип activity-события, /n
+                который вы хотите обрабатывать./n
+              enum:
+                - INITIATED
+                - ACCEPTED
+                - SCENARIO_CHANGED
+                - STARTED
+                - RUNNING
+                - DATA_WAITING
+                - EVENT_WAITING
+                - PAUSED
+                - HOLD
+                - POSITIVE_ENDING
+                - NEUTRAL_ENDING
+                - NEGATIVE_ENDING
+                - CANCELLED
+                - SKIPPED
+                - IS_ROLLING_BACK
+                - HAS_ROLLED_BACK
+                - FAULT
+            status:
+              $ref: "#/$defs/status"
+          required:
+            - source
+            - source_scenario
+            - source_activity_type
+            - source_scenario_state
+          additionalProperties: false
+        integration:
+          oneOf:
+            - $ref: "#/$defs/integration_business_api"
+            - $ref: "#/$defs/integration_activity"
+        ## Описываем типы для триггеров
+        #
+        trigger_api:
+          type: object
+          properties:
+            title:
+              title: Название
+              type: string
+              description: >
+                Название триггера.
+            description:
+              title: Описание
+              type: string
+              description: >
+                \n
+                Подробное описание триггера, если оно требуется.
+                \n
+                Особенно важно подробно описать ручные действия, действия по таймеру или внешние события.
+            type:
+              title: Тип триггера
+              enum:
+                - API
+              description: >
+                \n
+                Типы триггеров бизнес-сценария могут быть следующими:
+                \n
+                inner_logic - сценарий начинается не под влиянием действий другого BBB, а в соответствии с внутренней логикой. Например: \n
+                  * Выполнение сотрудником действий в UI \n
+                  * расписание или таймер \n
+                  * событие от АС, которая не является частью другого BBB \n                        
+                \n
+                event - сценарий начинается после получения события от BBB (это может быть и сторонний BBB и текущий);
+                \n
+                API - сценарий начинается по управляющему воздействию стороннего BBB через API (PUT) текущего BBB;
+                \n
+            api:
+              title: Бизнес API (setter)
+              description: >
+                \n
+                Управляющий API, через который внешние потребители могут запустить процесс.
+                \n
+                Указывается идентификатор (поле id) одного из собственных API, описанных в секции business_api текущего BBB.
+                \n
+                Необходимо указать интерфейс с типом setter.
+              type: string
+          required:
+            - type
+            - api
+          additionalProperties: false
+        trigger_event:
+          type: object
+          properties:
+            title:
+              title: Название
+              type: string
+              description: >
+                Название триггера.
+            description:
+              title: Описание
+              type: string
+              description: >
+                \n
+                Подробное описание триггера, если оно требуется.
+                \n
+                Особенно важно подробно описать ручные действия, действия по таймеру или внешние события.
+            type:
+              title: Тип триггера
+              enum:
+                - event
+              description: >
+                \n
+                Типы триггеров бизнес-сценария могут быть следующими:
+                \n
+                inner_logic - сценарий начинается не под влиянием действий другого BBB, а в соответствии с внутренней логикой. Например: \n
+                  * Выполнение сотрудником действий в UI \n
+                  * расписание или таймер \n
+                  * событие от АС, которая не является частью другого BBB \n                        
+                \n
+                event - сценарий начинается после получения события от BBB (это может быть и сторонний BBB и текущий);
+                \n
+                API - сценарий начинается по управляющему воздействию стороннего BBB через API (PUT) текущего BBB;
+                \n
+            event:
+              title: Событие
+              description: >
+                Business- или activity-событие (стороннего BBB или собственное), которое является триггером.
+                \n
+              $ref: "#/$defs/integration"
+          required:
+            - type
+            - event
+          additionalProperties: false
+        trigger_inner:
+          type: object
+          properties:
+            title:
+              title: Название
+              type: string
+              description: >
+                Название триггера.
+            description:
+              title: Описание
+              type: string
+              description: >
+                \n
+                Подробное описание триггера, если оно требуется.
+                \n
+                Особенно важно подробно описать ручные действия, действия по таймеру или внешние события.
+            type:
+              title: Тип триггера
+              enum:
+                - inner_logic
+              description: >
+                \n
+                Типы триггеров бизнес-сценария могут быть следующими:
+                \n
+                inner_logic - сценарий начинается не под влиянием действий другого BBB, а в соответствии с внутренней логикой. Например: \n
+                  * Выполнение сотрудником действий в UI \n
+                  * расписание или таймер \n
+                  * событие от АС, которая не является частью другого BBB \n                        
+                \n
+                event - сценарий начинается после получения события от BBB (это может быть и сторонний BBB и текущий);
+                \n
+                API - сценарий начинается по управляющему воздействию стороннего BBB через API (PUT) текущего BBB;
+                \n
+          required:
+            - type
+            - title
+            - description
+          additionalProperties: false
+        trigger_item:
+          oneOf:
+            - $ref: "#/$defs/trigger_inner"
+            - $ref: "#/$defs/trigger_event"
+            - $ref: "#/$defs/trigger_api"
+        scenario:
+          type: object
+          properties:
+            id:
+              title: Код
+              type: string
+              pattern: ^[A-Z0-9_]{1,256}$
+              description: >
+                \n
+                Код бизнес-сценария, который указывается в событиях и используется в системах мониторинга для идентификации сценариев.
+                \n
+                До 256 символов, обязательно начинается с буквы.
+                \n
+                В коде допустимо использовать:
+                \n
+                * латинские буквы [A-Z],
+                \n
+                * цифры [0-9],
+                \n
+                * "_"
+                \n
+                Значение этого атрибута отражается в следующих полях activity- или business-события:
+                \n
+                * body.parentProcess.scenario
+                \n
+                * body.service.scenario
+            title:
+              title: Название
+              type: string
+              description: >
+                \n
+                Название бизнес-сценария. Используйте короткое и ёмкое описание.
+            description:
+              title: Подробное описание
+              type: string
+              description: >
+                \n
+                Подробное описание бизнес-сценария, которое позволит понять его суть и значение.
+            status:
+              title: Статус
+              $ref: "#/$defs/status"
+            schemaRef:
+              title: Схема процесса
+              type: string
+              description: >
+                \n
+                Ссылка на схему, которая описывает процесс.
+                \n
+                Это может быть, например, название процесса (Пxxxx) или ссылка на диаграмму в Confluence.
+            business_function:
+              title: Бизнес-функция
+              type: string
+              pattern: ^[A-Za-z0-9_]{1,256}$
+              description: >
+                \n
+                Бизнес-функция, которая реализует данный сценарий.
+                \n
+                Бизнес-функция должна быть из списка определенных бизнес-функций.
+            automated_level:
+              title: Уровень автоматизации
+              enum:
+                - manual
+                - auto
+                - semi_auto
+              description: >
+                \n
+                Уровень автоматизации бизнес-сценария может иметь одно из значений:
+                \n
+                manual - сценарий выполняет человек, вне АС/ФП.
+                \n
+                auto - выполнение сценария происходит в АС/ФП без участия человека.
+                \n
+                semi_auto - выполнение сценария происходит в АС/ФП, но с участием человека.
+            children_scenario_allowed:
+              title: Допускаются дочерние сценарии
+              description: >
+                Если выбрано значение true, то текущий сценарий позволяет подключаться к его activity дочерним сценариям.
+                \n
+                Это значит, что он публикует activity-событие INITIATED и готов обрабатывать события ACCEPTED и ожидать 
+                \n
+                завершения работы дочерних сценариев.
+                \n
+                Если значение false, то сценарий не допускает дочерних в своей логике, не публикует INITIATED и не ждет.
+                \n
+                Этот атрибут влияет на набор activity-событий, которые обязан публиковать сценарий.
+              type: boolean
+            trigger_groups:
+              title: Триггеры
+              description: >
+                \n
+                Триггеры для старта бизнес-процесса. Триггеры объединены в группы, которые должны содержать один или несколько триггеров.
+                \n
+                Например, процесс может стартовать после:
+                \n
+                * получения одного или нескольких событий от сторонних BBB или собственного,
+                \n
+                * обращения к API (PUT) текущего BBB сторонним потребителем,
+                \n
+                * запуска сценария через UI пользователем,
+                \n
+                * наступления времени по таймеру,
+                \n
+                * наступления внешнего (не входящего ни в один BBB) события,
+                \n
+                * любого сочетания из вышеперечисленных
+              type: array
+              items:
+                type: object
+                properties:
+                  group_name:
+                    type: string
+                    title: Название группы
+                    description: >
+                      \n
+                      Название для группы триггеров. Например, "Ручной запуск сценария" или "Запуск по события из ЛК в СберБизнес" и т.д.
+                  trigger_items:
+                    title: Список триггеров в группе
+                    type: array
+                    description: >
+                      \n
+                      Должен быть хотя бы один. Если указано несколько триггеров, то сценарий запускает только после выполнения всех из них.
+                      \n
+                      Если вам необходимо реализовать условие "ИЛИ", то триггеры необходимо выделить в разные группы.
+                    items:
+                      $ref: "#/$defs/trigger_item"
+                required:
+                  - group_name
+                  - trigger_items
+            business_events_produced:
+              title: События
+              description: >
+                \n
+                Business-события, которые генерируются в рамках выполнения данного сценария.
+                \n
+                Business-события описываются только идентификатором события (id) из раздела business_api,
+                \n
+                так как business-событие связано, в первую очередь, с бизнес-сущностью и может создаваться в рамках разных сценариев.
+                \n
+              type: array
+              items:
+                type: string
+            integrations_used:
+              title: Интеграции
+              description: >
+                \n
+                Интеграции (бизнес-API и activity-события сторонних BBB), которые потребляются в рамках текущего сценария.
+                \n
+                Здесь можно так же указать и интеграцию с собственным бизнес-API или activity-событием, 
+                \n
+                указав в качестве BBB-источника свой BBB.
+              type: array
+              items:
+                $ref: "#/$defs/integration"
+          required:
+            - id
+            - title
+            - automated_level
+            - children_scenario_allowed
+          additionalProperties: false
+        responsible:
+          oneOf:
+            - $ref: "#/$rels/employee_data.employee_data"
+            - type: array
+              items:
+                $ref: "#/$rels/employee_data.employee_data"
+        team:
+          type: object
+          properties:
+            contactInfo:
+              type: array
+              items:
+                type: string
+                description: "Email, ссылка на команду в Confluence, Пульс, Addressbook и любая другая доступная информация"
+            team_members:
+              type: array
+              items:
+                $ref: "#/$rels/employee_data.employee_data"
+        responsibles:
+          type: object
+          properties:
+            owner:
+              $ref: "#/$rels/employee_data.employee_data"
+            EAArchitect:
+              $ref: "#/$defs/responsible"
+            Methodologist:
+              $ref: "#/$defs/responsible"
+            solution_architector:
+              $ref: "#/$defs/responsible"
+            development_team:
+              $ref: "#/$defs/team"
+            support_team:
+              type: object
+              properties:
+                IFT:
+                  $ref: "#/$defs/team"
+                PSI:
+                  $ref: "#/$defs/team"
+                PROM:
+                  $ref: "#/$defs/team"
+          additionalProperties: false
+        business_entity:
+          patternProperties:
+            ^[A-Za-z0-9_]{1,256}$:
+              description: >
+                Значение этого атрибута отражается в следующих полях activity- или business-события
+                \n
+                * body.eventObject.type
+              type: object
+              properties:
+                summary:
+                  type: string
+                  description: Краткое описание или заголовок бизнес-сущности
+                description:
+                  type: string
+                  description: Подробное описание бизнес-сущности
+        business_function:
+          patternProperties:
+            ^[A-Za-z0-9_]{1,256}$:
+              type: object
+              properties:
+                title:
+                  title: Название
+                  type: string
+                  description: Название бизнес-функции.
+                description:
+                  title: Описание
+                  type: string
+                  description: Подробное описание бизнес-функции.
+              additionalProperties: False

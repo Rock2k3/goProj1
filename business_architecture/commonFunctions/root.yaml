@@ -1,0 +1,4 @@
+# Подключаем определяемые сущности метамодели
+imports:
+  - functionsBBB.yaml
+  - functionsPresentations.yaml

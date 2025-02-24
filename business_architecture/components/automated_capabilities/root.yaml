@@ -1,0 +1,27 @@
+imports:
+  - pickup_point.yaml
+  - pickup_point_business.yaml
+  - logistics.yaml
+  - logistics_business.yaml
+  - washing.yaml
+  - washing_business.yaml
+  - ironing.yaml
+  - ironing_business.yaml
+  - cleaning.yaml
+  - cleaning_business.yaml
+  - accounting.yaml
+  - accounting_business.yaml
+  - managing_inventory_items.yaml
+  - managing_inventory_items_business.yaml
+  - equipment_maintenance.yaml
+  - equipment_maintenance_business.yaml
+  - client_service.yaml
+  - client_service_business.yaml
+  - production_process_control.yaml
+  - production_process_control_business.yaml
+  - marketing.yaml
+  - marketing_business.yaml
+  - finance.yaml
+  - finance_business.yaml
+  - client_profile.yaml
+  - client_profile_business.yaml

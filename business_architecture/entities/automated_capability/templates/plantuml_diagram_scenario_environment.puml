@@ -1,0 +1,43 @@
+@startmindmap
+
+skinparam TitleFontSize 22
+skinparam nodeFontSize 16
+skinparam headerFontSize 22
+
+title Диаграмма окружения сценария
+
+<style>
+node {
+    HorizontalAlignment center
+    MaximumWidth 250
+    FontSize 16
+}
+header {
+    FontSize 16
+}
+</style>
+
+left header
+[[/entities/automated_capability/scenario_environment_diagramm Справка о диаграмме окружения сценариев]]
+endheader
+
+*:BBB {{&bbid}}
+====
+Сценарий {{&scenario_id}}
+;
+**[#DeepSkyBlue] Интеграции с внешними сценариями/ВВВ
+{{&external_integration}}
+**[#Chartreuse] Последующие сценарии
+{{&following_scenarios}}
+**[#Pink] Дочерние сценарии
+{{&Children}}
+
+left side
+**[#DeepSkyBlue] Интеграции с нашим сценарием
+{{&integration_with_current}}
+**[#Chartreuse] Предшествующие сценарии
+{{&previous_scenarios}}
+**[#Pink] Родительские сценарии
+{{&Parents}}
+
+@endmindmap

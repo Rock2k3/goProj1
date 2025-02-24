@@ -1,0 +1,9 @@
+@startuml
+top to bottom direction
+title Карта ФБС Сбербанка
+skinparam TitleFontSize 32
+skinparam RectangleBackgroundColor #f8e7c0
+!pragma layout elk
+{{&code}}
+{{&relations}}
+@enduml

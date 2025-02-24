@@ -1,0 +1,10 @@
+imports:
+  - website.yaml
+  - lk_operator_pickup_point.yaml
+  - task_managment_system.yaml
+  - 1c_accounting.yaml
+  - customer_relationship_service_managment.yaml
+  - inventory_accounting.yaml
+  - order_lifecycle_managment.yaml
+  - transport_service.yaml
+  - 1c_holding.yaml

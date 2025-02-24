@@ -1,0 +1,9 @@
+automated_system:
+  TMS:
+    name: Система управления задачами
+    nickname: СУЗ
+    ci_id: CI00000007
+    description: Система для управления задачами и контроля сроков выполнения работ
+    full_name: Система управления задачами
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

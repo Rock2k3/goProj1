@@ -1,0 +1,5 @@
+automated_capability_business:
+  CLE:
+    scenarios:
+      - id: DRY_CLEANING
+        sla: 30

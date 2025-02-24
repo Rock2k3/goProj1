@@ -1,0 +1,118 @@
+# Описываем метаданные Автоматизированных систем
+# Данные заполняются из дашборда МЕТА по АС/ФП
+entities:
+  # Идентификатор сущности
+  automated_system:
+    # Смысловое описание сущности
+    title: Автоматизированная система (АС)
+    menu: >
+      (
+        {
+            "link": "entities/automated_system/automated_systems_table",
+            "location": "Архитектура/04. Автоматизированные системы"
+        }
+      )
+    # Схема данных объектов сущности
+    schema:
+      # Описываем схему данных объектов сущности
+      patternProperties:
+        "^[a-zA-Z0-9_]{1,20}$":
+          type: object
+          properties:
+            name:
+              title: Наименование АС
+              type: string
+            full_name:
+              title: Полное наименование АС
+              type: string
+            nickname:
+              title: Обозначение АС
+              type: string
+            system_type:
+              title: Тип системы
+              description: >
+                Тип объекта Единого Дерева АС:
+                * AS - Автоматизированная система (АС)
+                * FS - Функциональная подсистема (ФП)
+                * M  - Модуль (М)
+                * SM - Подмодуль (ПМ)
+              enum:
+                - AS
+                - FS
+                - M
+                - SM
+            ci_id:
+              title: ID AC
+              type: string
+              description: это CI из Service Manager
+            description:
+              title: Краткое описание АС
+              type: string
+            as_ref:
+              title: Ссылка на карточку АС/ФП
+              description: >
+                Значение берется из адресной строки браузера - URL карточки объекта.
+              type: string
+          required:
+            - name
+            # Позволяем другие поля
+          additionalProperties: true
+    presentations:
+      automated_systems_table_list:
+        type: table
+        headers:
+          - value: id_as
+            text: Код АС
+            sortable: true
+            align: left
+            width: 10%
+            link: as_ref
+
+          - value: name
+            text: Название АС
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: full_name
+            text: Полное название АС
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: description
+            text: Описание АС
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: nickname
+            text: Синоним АС
+            sortable: true
+            align: left
+            width: 30%
+
+          - value: system_type
+            text: Тип системы
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: ci_id
+            text: ID АС в service manager
+            sortable: true
+            align: left
+            width: 40%
+
+        source: datasets.automated_systems_list
+
+      automated_systems_table:
+        type: markdown
+        template: templates/automated_systems_table.md
+
+
+    objects:
+      automated_system:
+        route: "/"
+        title: System
+        symbol: >

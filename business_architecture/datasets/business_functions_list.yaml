@@ -1,0 +1,22 @@
+datasets:
+  # Получаем список ФБС с линками на карточку и карту
+  datasets.business_functions_list:
+    source: >
+      (
+              [$distinct([automated_capability.$spread().(
+                $ac:= $.*;
+                $AUTOMATED_CAPABILITY_ID:= $keys()[0];
+                $bf_id:= $.*.business_functions.$keys();
+                $bf:= $.*.business_functions;     
+                $map($bf_id, function($v){{
+                "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                "title_bbb": $ac.title,
+                "id": $v,
+                "title": $lookup($bf,$v).title,
+                "description": $lookup($bf,$v).description,
+                "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID
+                }})
+
+              )])]
+
+            )

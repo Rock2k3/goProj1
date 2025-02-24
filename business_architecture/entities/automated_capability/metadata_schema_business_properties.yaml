@@ -1,0 +1,105 @@
+entities:
+  automated_capability_business: # Cущность отражает бизнес-атрибуты BBB
+    schema:
+      patternProperties:
+        "^[a-zA-Z0-9_]{1,20}$": # Шаблон
+          type: object
+          properties:
+            scenarios:
+              type: array
+              description: >
+                \n
+                Сценарии которые реализует данный BBB.
+                \n 
+                Ссылка на инструкцию по заполнению сценариев: https://confluence.sberbank.ru/pages/viewpage.action?pageId=16629470223
+              items:
+                type: object
+                properties:
+                  id:
+                    title: Код
+                    type: string
+                    pattern: ^[A-Z0-9_]{1,256}$
+                    description: >
+                      \n
+                      Код бизнес-сценария, который указывается в событиях и используется в системах мониторинга для идентификации сценариев.
+                      \n
+                      До 256 символов, обязательно начинается с буквы.
+                      \n
+                      В коде допустимо использовать:
+                      \n
+                      * латинские буквы [A-Z],
+                      \n
+                      * цифры [0-9],
+                      \n
+                      * "_"
+                  planned_date:
+                    title: Плановая дата ввода в эксплуатацию
+                    type: string
+                    pattern: ^([0]?[1-9]|[1|2][0-9]|[3][0|1])[.]([0]?[1-9]|[1][0-2])[.][0-9]{4}$
+                    description: >
+                      \n
+                      Плановая дата введения сценария в эксплуатацию в формате dd.mm.yyyy.
+                  sla:
+                    title: SLA сценария (минуты)
+                    type: number
+                    description: >
+                      \n
+                      SLA сценария - срок выполнения сценария в минутах.
+                      \n
+                      Этот срок будет проверяться в системах мониторинга.
+                required:
+                  - id
+                  - sla
+                additionalProperties: true
+          required:
+            - scenarios
+          additionalProperties: False
+    schema_scenarios_business:
+      type: object
+      properties:
+        scenarios:
+          type: array
+          description: >
+            \n
+            Сценарии которые реализует данный BBB.
+          items:
+            type: object
+            properties:
+              id:
+                title: Код
+                type: string
+                pattern: ^[A-Z0-9_]{1,256}$
+                description: >
+                  \n
+                  Код бизнес-сценария, который указывается в событиях и используется в системах мониторинга для идентификации сценариев.
+                  \n
+                  До 256 символов, обязательно начинается с буквы.
+                  \n
+                  В коде допустимо использовать:
+                  \n
+                  * латинские буквы [A-Z],
+                  \n
+                  * цифры [0-9],
+                  \n
+                  * "_"
+              planned_date:
+                title: Плановая дата ввода в эксплуатацию
+                type: string
+                pattern: ^([0]?[1-9]|[1|2][0-9]|[3][0|1])[.]([0]?[1-9]|[1][0-2])[.][0-9]{4}$
+                description: >
+                  \n
+                  Плановая дата введения сценария в эксплуатацию в формате dd.mm.yyyy.
+              sla:
+                title: SLA сценария (минуты)
+                type: number
+                description: >
+                  \n
+                  SLA сценария - срок выполнения сценария в минутах.
+                  \n
+                  Этот срок будет проверяться в системах мониторинга.
+            required:
+              - id
+              - sla
+            additionalProperties: true
+      required:
+        - scenarios

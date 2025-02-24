@@ -1,0 +1,234 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  automated_capability:
+    # Схема данных объектов сущности
+    schema:
+      patternProperties:
+        "^[a-zA-Z0-9_]{1,20}$": # Шаблон
+          description: >
+            Код BBB.
+            \n
+            Максимальная длина - 20 символов. Может содержать:
+            \n
+            * большие и маленькие латинские буквы;
+            \n
+            * цифры;
+            \n
+            * знак "_"
+            \n
+            Так же используется в качестве ключа при выгрузке в Confluence.
+            \n
+            Значение этого атрибута отражается в следующих полях activity- или business-события
+            \n
+            * header.srcModule
+            \n
+            * body.parentProcess.sourceSystemId
+            \n
+            * body.eventObject.sourceSystemId
+          type: object  # аФБС будет объект
+          properties:   # со следующей структурой
+            # Связь аФБС с другими объектами (аФБС, АС, Роли и т.д.)
+            title:
+              title: Наименование
+              type: string
+              description: |
+                
+                Введите короткий заголовок BBB (желательно, уникальный). Например, '[CL] [Онлайн] [BBB] Контекст сделки' или '[Риски] [BBB] Формирование ГСЗ'
+            description:
+              title: Описание
+              type: string
+              description: |
+                
+                Подробное описание BBB.
+
+            owner_block:
+              title: Блок-владелец
+              type: string
+              description: |
+                
+                Блок-владелец данного BBB.
+            owner_tribe:
+              title: Трайб-владелец
+              type: string
+              description: |
+                
+                Трайб-владелец данного BBB.
+            responsibles:
+              $ref: "#/$defs/responsibles"
+            status:
+              $ref: "#/$defs/status"
+            architecture_schemas:
+              description: |
+                
+                Ссылки на архитектурные диаграммы BBB: скетчи, бизнес архитектура, концептуальная архиектура и прочее.
+                Заполняем, например, так:
+                 - title: Скетч
+                   url: https://confluence.sberbank.ru/pages/viewpage.action?pageId=XXXXXXXXXX
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  url:
+                    type: string
+                required:
+                  - title
+                  - url
+            business_api:
+              title: Бизнес API
+              description: |
+                Бизнес API, которые BBB предоставляет внешним потребителям.
+              type: array
+              items:
+                $ref: "#/$defs/business_api"
+            business_functions:
+              description: >
+                Список бизнес-функций, которые выполняет BBB.
+                \n
+                Список бизнес-функций, актуальный на начало проекта ЦКП, находится на этой странице:
+                \n
+                * https://confluence.sberbank.ru/pages/viewpage.action?pageId=10025935087
+              $ref: "#/$defs/business_function"
+            scenarios:
+              type: array
+              description: >
+                \n
+                Сценарии которые реализует данный BBB.
+                \n 
+                Ссылка на инструкцию по заполнению сценариев: https://confluence.sberbank.ru/pages/viewpage.action?pageId=16629470223
+              items:
+                $ref: "#/$defs/scenario"
+            systems:
+              title: Автоматизированные системы (АС)
+              type: array
+              items:
+                title: АС (автоматизированные системы)
+                $ref: "#/$rels/automated_system.automated_system"
+                description: Ссылки на AC, которые использует BBB
+            business_entities:
+              title: Бизнес-сущности
+              description: >
+                \n
+                Сущности, данными которых эксклюзивно владеет и управляет данный BBB. Например, кредитная заявка клиента,
+                \n
+                договор клиент, результат экспертизы и прочее.
+              $ref: "#/$defs/business_entity"
+          required:
+            - title
+            - description
+            - owner_block
+            - owner_tribe
+            - status
+            - business_api
+            - scenarios
+          # Исключаем иные идентификаторы
+          additionalProperties: false
+    schema_interface_type:
+      type: object
+      properties:
+        interfaces:
+          title: Интерфейсы (API)
+          description: >
+            \n
+            Интерфейсы, которые BBB предоставляет внешним потребителям.
+          type: array
+          items:
+            type: object
+            properties:
+              interface_type:
+                title: Тип интерфейса
+                enum:
+                  - event
+                  - API
+            required:
+              - interface_type
+            additionalProperties: true
+    schema_header_1:
+      type: object
+      properties: # со следующей структуро
+        title:
+          title: Наименование
+          type: string
+        status:
+          title: Статус ЖЦ
+          enum:
+            - Проектирование
+            - Разработка
+            - Эксплуатация
+            - Выведен
+          default: Проектирование
+        description:
+          title: Описание
+          type: string
+        owner_block:
+          title: Блок-владелец
+          type: string
+        owner_tribe:
+          title: Трайб-владелец
+          type: string
+      required:
+        - title
+        - status
+        - description
+        - owner_block
+        - owner_tribe
+      additionalProperties: true
+    schema_scenarios:
+      type: object
+      properties:
+        scenarios:
+          type: array
+          description: >
+            \n
+            Сценарии которые реализует данный BBB.
+          items:
+            type: object
+            properties:
+              id:
+                title: Код
+                type: string
+                pattern: ^[A-Z0-9_]{1,256}$
+                description: >
+                  \n
+                  Код бизнес-сценария, который указывается в событиях и используется в системах мониторинга для идентификации сценариев.
+                  \n
+                  До 256 символов, обязательно начинается с буквы.
+                  \n
+                  В коде допустимо использовать:
+                  \n
+                  * латинские буквы [A-Z],
+                  \n
+                  * цифры [0-9],
+                  \n
+                  * "_"
+              title:
+                title: Название
+                type: string
+                description: >
+                  \n
+                  Название бизнес-сценария. Используйте короткое и ёмкое описание.
+              automated_level:
+                title: Уровень автоматизации
+                enum:
+                  - manual
+                  - auto
+                  - semi_auto
+                description: >
+                  \n
+                  Уровень автоматизации бизнес-сценария может иметь одно из значений:
+                  \n
+                  manual - сценарий выполняет человек, вне АС/ФП.
+                  \n
+                  auto - выполнение сценария происходит в АС/ФП без участия человека.
+                  \n
+                  semi_auto - выполнение сценария происходит в АС/ФП, но с участием человека.
+            required:
+              - id
+              - title
+              - automated_level
+            additionalProperties: true
+      required:
+        - scenarios

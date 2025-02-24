@@ -1,0 +1,169 @@
+automated_capability:
+  ACC:
+    title: Бухгалтерский учет
+    owner_block: Химчистка
+    owner_tribe: Бухгалтерский отдел
+    description: 'Блок предназначен для автоматизации и оптимизации бухгалтерских процессов компании. '
+    status: Эксплуатация
+    responsibles:
+      owner: "1"
+      Methodologist: "1"
+      EAArchitect: "12"
+      solution_architector: "23"
+      development_team:
+        contactInfo:
+          - "ACC_team@ourLoundry.ru"
+        team_members:
+          - "34"
+      support_team:
+        IFT:
+          contactInfo:
+            - "ACC_team@ourLoundry.ru"
+          team_members:
+            - "45"
+        PSI:
+          contactInfo:
+            - "ACC_team@ourLoundry.ru"
+          team_members:
+            - "45"
+        PROM:
+          contactInfo:
+            - "ACC_team@ourLoundry.ru"
+          team_members:
+            - "45"
+    business_functions:
+      ACCOUNTING:
+        title: Бухгалтерский учет
+        description: ' Функция отвечает за ведение бухгалтерского учета, включая регистрацию финансовых операций, составление отчетности и контроль за соблюдением финансовых норм и правил.'
+    systems:
+      - 1C_ACC # Планируется миграция на новую версию
+    business_api:
+      - id: GET_ACCOUNTING_RECORD
+        api_type: getter
+        business_entity: ACCOUNTING_RECORD
+        title: Данные по бухгалтерским проводкам
+        description: Группа интерфейсов, которые возвращают данным по проводкам в бухгалтерском учете
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: GET_REPORT
+        api_type: getter
+        business_entity: ACCOUNTING_REPORT
+        title: Получить бухгалтерский отчет
+        description: Получение данных готовых бухгалтерских отчетов
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: CREATE_NEW_REPORT
+        api_type: setter
+        business_entity: ACCOUNTING_REPORT
+        title: Создание нового бухгалтерского отчета
+        description: Запрос на генерацию нового бухгалтерского отчета
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: RECORD_UPDATED
+        api_type: business_event
+        business_entity: ACCOUNTING_RECORD
+        title: Создание/изменение бухгалтерской проводки
+        description: Уведомление о создании новой или изменении существующей бухгалтерской проводки
+        status: Эксплуатация
+      - id: REPORT_UPDATE
+        api_type: business_event
+        business_entity: ACCOUNTING_REPORT
+        title: Создание/изменение бухгалтерской отчета
+        description: Уведомление о создании нового или изменении существующего бухгалтерского отчета
+        status: Эксплуатация
+    scenarios:
+      - id: ACCOUNTING_RECORD_GENERATION
+        title: Формирование бухгалтерской проводки
+        description: Сценарий формирует бухгалтерскую проводку на основании продуктового события
+        status: Эксплуатация
+        business_function: ACCOUNTING
+        automated_level: auto
+        business_events_produced:
+          - RECORD_UPDATED
+        integrations_used:
+          - source: CLE
+            source_business_api: DRY_CLEANING_JOB_DETAILS
+            status: Эксплуатация
+          - source: WSH
+            source_business_api: WASHING_JOB_DETAILS
+            status: Эксплуатация
+          - source: IRON
+            source_business_api: IRONING_JOB_DETAILS
+            status: Эксплуатация
+          - source: EQM
+            source_business_api: EQUIPMENT_MAINTENANCE_JOB_DETAILS
+            status: Эксплуатация
+          - source: MII
+            source_business_api: ITEMS_REPLENISHMENT_TASK_DETAILS
+            status: Эксплуатация
+          - source: MII
+            source_business_api: ITEMS_BALANCE_DETAILS
+            status: Эксплуатация
+        trigger_groups:
+          - group_name: Отражение операций химчистки в бухучете
+            trigger_items:
+              - type: event
+                event:
+                  source: CLE
+                  source_business_api: DRY_CLEANING_JOB_UPDATE
+          - group_name: Отражение операций Глажки в бухучете
+            trigger_items:
+              - type: event
+                event:
+                  source: IRON
+                  source_business_api: IRONING_JOB_UPDATE
+          - group_name: Отражение операций Стирки в бухучете
+            trigger_items:
+              - type: event
+                event:
+                  source: WSH
+                  source_business_api: WASHING_JOB_UPDATE
+          - group_name: Отражение операций обслуживания оборудования в бухучете
+            trigger_items:
+              - type: event
+                event:
+                  source: EQM
+                  source_business_api: EQUIPMENT_MAINTENANCE_JOB_UPDATE
+          - group_name: Отражение операций c ТМЦ в бухучете
+            trigger_items:
+              - type: event
+                event:
+                  source: MII
+                  source_business_api: ITEMS_REPLENISHMENT_TASK_UPDATE
+          - group_name: Отражение операций c ТМЦ в бухучете (закупка)
+            trigger_items:
+              - type: event
+                event:
+                  source: MII
+                  source_business_api: ITEMS_BALANCE_UPDATE
+        children_scenario_allowed: false
+      - id: ACCOUNTING_REPORT_GENERATION
+        title: Формирование бухгалтерского отчета
+        description: Сценарий формирует бухгалтерский отчет на основании данных учета
+        status: Эксплуатация
+        business_function: ACCOUNTING
+        automated_level: auto
+        business_events_produced:
+          - REPORT_UPDATE
+        children_scenario_allowed: false
+        trigger_groups:
+          - group_name: Основной
+            trigger_items:
+              - type: inner_logic
+                title: Запуск по календарю
+                description: Формирование отчетов запускается в соответствии с календарем регуляторной отчетности РФ.
+          - group_name: Запрос на отчет от стороннего BBB
+            trigger_items:
+              - type: API
+                api: CREATE_NEW_REPORT
+    business_entities:
+      ACCOUNTING_RECORD:
+        summary: Бухгалтерская проводка
+        description: Бухгалтерская проводка, содержащая данные о счетах Дт И Кт и данные Субконто
+      ACCOUNTING_REPORT:
+        summary: Бухгалтерский отчет
+        description: Бухгалтерские отчеты, которые требуются
+
+
+
+

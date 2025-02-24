@@ -1,0 +1,90 @@
+svgIcons:
+
+  hex_old: >
+    <svg xmlns="http://www.w3.org/2000/svg" width = "230" height = "200" viewBox="0 0 20 20">
+    <path transform="translate(0,2)" fill="dimgrey" fill-rule="evenodd" d="M8.5.134a1 1 0 0 0-1 0l-6 3.577a1 1 0 0 0-.5.866v6.846a1 1 0 0 0 .5.866l6 3.577a1 1 0 0 0 1 0l6-3.577a1 1 0 0 0 .5-.866V4.577a1 1 0 0 0-.5-.866L8.5.134z"/>
+    </svg>
+
+  hexBBB: >
+    <svg xmlns="http://www.w3.org/2000/svg" width = "$width" height = "$height" viewBox="0 0 23.2 20" >
+      <polygon points="0,10 5.8,0 17.4,0 23.2,10 17.4,20 5.8,20" fill="lightgreen" fill-rule="evenodd">
+    	<title>
+    TooltipPlaceholder
+    	</title>
+      </polygon>
+      <a href="RefPlaceholder" target="_blank">
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="blue" font-family="Arial" font-size="1" text-decoration = "underline">TitlePlaceholder</text>
+      </a>
+    </svg>
+
+docs:
+  # Добавим документ для просмотря всех SVG иконок в нашей метамодели.
+  bages_icons:
+    type: smartants           # Тип документа
+    location: /Системные справочники/01. Иконки (SVG)
+    source: >
+      (
+
+        $svgGroups := [
+                            {
+                            "Шаблоны":{ 
+                            "title": "Шаблоны"}
+                            },
+                            {
+                            "Примеры":{ 
+                            "title": "Примеры"}
+                            }
+                        ];
+
+        $svgNodes := [$distinct([$$.svgIcons.$spread().(
+
+            $SVG_ID := $keys()[0];
+
+            {
+            "Шаблоны." & $SVG_ID:{ 
+            "title": $SVG_ID,
+            "symbol": $SVG_ID}
+            }
+
+        )])];
+      
+        $svgNodes_add := [
+                    {
+                    "Примеры." & "test":{ 
+                    "title": "test",
+                    "symbol": "test"}
+                    }
+                ];
+      
+        $svgSymbols := [$distinct([$$.svgIcons.$spread().(
+
+                    $SVG_ID := $keys()[0];
+
+                    {
+                    $SVG_ID: $$.svgIcons.$eval($SVG_ID)
+                    }
+
+                )])];
+      
+        $svgSymbols_add := [
+                            {
+                            "test":$bbbSVG($$, "MONBLAN"),
+                            "hexBBB":$bbbSVG($$, "hexBBB")
+                            }
+         ];
+
+        {
+          "header":{
+                    "title":"Справочник SVG иконок", 
+                    "style":{ 
+                      "color": "#fbaaaa",
+                      "font-size": "22px",
+                      "font-weight": 800}},
+                  "config":{ 
+                    "distance": 20, 
+                    "trackWidth": 24},
+          "nodes": $merge($append($svgNodes, $svgNodes_add)),
+          "symbols": $merge($append($svgSymbols, $svgSymbols_add)),
+          "links":[]
+        }      
+      )

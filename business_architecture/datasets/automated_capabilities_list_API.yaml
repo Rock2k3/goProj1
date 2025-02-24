@@ -1,0 +1,23 @@
+datasets:
+
+  datasets.automated_capabilities_list_API:
+    source: >
+      (
+                automated_capability.$spread().(
+                $ac:= $.*;
+                $AUTOMATED_CAPABILITY_ID:= $keys()[0];
+                $.*.business_api.
+                {
+                  "title":$ac.title, 
+                   "id":$AUTOMATED_CAPABILITY_ID,
+                  "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID,
+                   "id_API": id,
+                   "title_API": title,
+                   "api_type": api_type,
+                   "business_entity": business_entity,
+                   "description_API": description,
+                   "link_API": schemaURL,
+                   "status": status
+                }
+                )
+                )

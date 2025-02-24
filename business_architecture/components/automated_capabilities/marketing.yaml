@@ -1,0 +1,90 @@
+automated_capability:
+  MRKT:
+    title: Маркетинг
+    owner_block: Химчистка
+    owner_tribe: Отдел маркетинга
+    description: 'Блок предназначен для автоматизации и оптимизации маркетинговых процессов компании. Он включает в себя управление корпоративным веб-сайтом, публикацию новостей и объявлений, а также анализ маркетинговых данных для принятия стратегических решений.'
+    status: Эксплуатация
+    responsibles:
+      owner: "8"
+      Methodologist: "8"
+      EAArchitect: "19"
+      solution_architector: "30"
+      development_team:
+        contactInfo:
+          - "MRKT_team@ourLoundry.ru"
+        team_members:
+          - "41"
+      support_team:
+        IFT:
+          contactInfo:
+            - "MRKT_team@ourLoundry.ru"
+          team_members:
+            - "52"
+        PSI:
+          contactInfo:
+            - "MRKT_team@ourLoundry.ru"
+          team_members:
+            - "52"
+        PROM:
+          contactInfo:
+            - "MRKT_team@ourLoundry.ru"
+          team_members:
+            - "52"
+    business_functions:
+      WEB_NEWS:
+        title: Управление сайтом и новостями
+        description: 'Обновление и поддержание актуальности информации на корпоративном сайте,публикация новостей и объявлений.'
+    business_entities:
+      NEWS:
+        summary: Новость
+        description: Новостное сообщение
+      PRICE_LIST:
+        summary: Прайс-лист опубликованный на сайте Химчистки
+        description: Список цен за услуги Химчистки, который публикуется на сайте
+    scenarios:
+      - id: PRICE_LIST_UPDATE
+        title: Обновление прайс-листа на сайте
+        automated_level: auto
+        business_function: WEB_NEWS
+        children_scenario_allowed: false
+        status: Эксплуатация
+        trigger_groups:
+          - group_name: Обновление цен по событию
+            trigger_items:
+              - type: event
+                event:
+                  source: FINANCE
+                  source_business_api: PRICE_UPDATE
+          - group_name: Ручной запуск обновления цен
+            trigger_items:
+              - type: inner_logic
+                title: Ручной запуск
+                description: 'Обновление цен запускается вручную по кнопке в панели Администратора сайта. Требуется в случае сбоев основного процесса или подъема сайта из бэкапа'
+        integrations_used:
+          - source: FINANCE
+            source_business_api: GET_PRICE
+            status: Эксплуатация
+        business_events_produced:
+          - PRICE_LIST_UPDATED
+    business_api:
+      - id: NEWS_UPDATE
+        # api_type: business_event
+        title: Изменение статуса новости
+        status: Эксплуатация
+        schemaURL: https://petstore.swagger.io/
+        business_entity: NEWS
+      - id: PRICE_LIST_UPDATED
+        api_type: business_event
+        title: Изменение статуса прайс-листа
+        business_entity: PRICE_LIST
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: GET_NEWS
+        api_type: getter
+        title: Получение актуальных новостей
+        business_entity: NEWS
+        status: Эксплуатация
+        schemaURL: https://petstore.swagger.io/
+    systems:
+      - WEB

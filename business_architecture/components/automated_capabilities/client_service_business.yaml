@@ -1,0 +1,5 @@
+automated_capability_business:
+  CLS:
+    scenarios:
+      - id: COMMUNICATION_WITH_CLIENT
+        sla: 15

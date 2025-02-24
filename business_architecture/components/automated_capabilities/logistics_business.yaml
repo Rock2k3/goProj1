@@ -1,0 +1,5 @@
+automated_capability_business:
+  LOG:
+    scenarios:
+      - id: DELIVERY
+        sla: 120

@@ -1,0 +1,145 @@
+automated_capability:
+  MII:
+    title: Управление ТМЦ
+    owner_block: Химчистка
+    owner_tribe: Хозяйственный отдел
+    description: 'Блок предназначен для автоматизации и оптимизации процессов управления товарно-материальными ценностями (ТМЦ)'
+    status: Эксплуатация
+    responsibles:
+      owner: "7"
+      Methodologist: "7"
+      EAArchitect: "18"
+      solution_architector: "29"
+      development_team:
+        contactInfo:
+          - "MII_team@ourLoundry.ru"
+        team_members:
+          - "40"
+      support_team:
+        IFT:
+          contactInfo:
+            - "MII_team@ourLoundry.ru"
+          team_members:
+            - "51"
+        PSI:
+          contactInfo:
+            - "MII_team@ourLoundry.ru"
+          team_members:
+            - "51"
+        PROM:
+          contactInfo:
+            - "MII_team@ourLoundry.ru"
+          team_members:
+            - "51"
+    business_functions:
+      INVENTORY_ITEMS_MANAGING:
+        title: Управление ТМЦ
+        description: 'Функция отвечает за организацию и контроль процесса закупки товарно-материальных ценностей, включая планирование, выбор поставщиков, заключение контрактов и контроль за поставками.'
+    business_entities:
+      ITEMS_BALANCE:
+        summary: Остатки ТМЦ на складах
+      ITEMS_REPLENISHMENT_TASK:
+        summary: Заявка на выдачу ТМЦ производственному подразделению
+    business_api:
+      - id: ITEMS_BALANCE_UPDATE
+        api_type: business_event
+        business_entity: ITEMS_BALANCE
+        status: Эксплуатация
+        title: Событие об изменении остатков ТМЦ на складе
+      - id: ITEMS_REPLENISHMENT_REQUEST
+        api_type: setter
+        business_entity: ITEMS_BALANCE
+        status: Эксплуатация
+        schemaURL: https://petstore.swagger.io/
+        title: Запрос на доставку ТМЦ в подразделение
+      - id: ITEMS_BALANCE_DETAILS
+        api_type: getter
+        business_entity: ITEMS_BALANCE
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+        title: Данные по остаткам ТМЦ на складе
+      - id: ITEMS_REPLENISHMENT_TASK_UPDATE
+        api_type: business_event
+        business_entity: ITEMS_REPLENISHMENT_TASK
+        status: Эксплуатация
+        title: Событие об изменении статуса заявки на выдачу ТМЦ
+      - id: ITEMS_REPLENISHMENT_TASK_DETAILS
+        api_type: getter
+        business_entity: ITEMS_REPLENISHMENT_TASK
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+        title: Детали заявки на выдачу ТМЦ
+    scenarios:
+      - id: ITEMS_REPLENISHMENT
+        title: Закупка ТМЦ
+        status: Эксплуатация
+        business_function: INVENTORY_ITEMS_MANAGING
+        children_scenario_allowed: false
+        automated_level: auto
+        description: 'Сценарий запускает процесс закупки ТМЦ у поставщиков при достижении минимально допустимого остатка ТМЦ на складе'
+        trigger_groups:
+          - group_name: Изменение остатка после выдачи ТМЦ
+            trigger_items:
+              - type: event
+                event:
+                  source: MII
+                  source_scenario: ITEMS_REPLENISHMENT_TASK
+                  source_activity_type: ACTIVITY_RESULT
+                  source_scenario_state: POSITIVE_ENDING
+      - id: ITEMS_REPLENISHMENT_TASK
+        title: Обработка заявки на выдачу ТМЦ
+        description: 'В рамках сценария происходит поставка материалов, бытовой химии и других ТМЦ в производственные подразделения'
+        automated_level: semi_auto
+        business_function: INVENTORY_ITEMS_MANAGING
+        children_scenario_allowed: false
+        status: Эксплуатация
+        trigger_groups:
+          - group_name: Внеплановая поставка ТМЦ в отдел Химчистки
+            trigger_items:
+              - type: event
+                event:
+                  source: CLE
+                  source_scenario: DRY_CLEANING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+              - type: event
+                event:
+                  source: CLE
+                  source_scenario: DRY_CLEANING
+                  source_activity_type: ACTIVITY_ERRORS
+                  source_scenario_state: HOLD
+          - group_name: Внеплановая поставка ТМЦ в отдел Глажки
+            trigger_items:
+              - type: event
+                event:
+                  source: IRON
+                  source_scenario: IRONING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+              - type: event
+                event:
+                  source: IRON
+                  source_scenario: IRONING
+                  source_activity_type: ACTIVITY_ERRORS
+                  source_scenario_state: HOLD
+          - group_name: Внеплановая поставка ТМЦ в отдел Стирки
+            trigger_items:
+              - type: event
+                event:
+                  source: WSH
+                  source_scenario: WASHING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+              - type: event
+                event:
+                  source: WSH
+                  source_scenario: WASHING
+                  source_activity_type: ACTIVITY_ERRORS
+                  source_scenario_state: HOLD
+          - group_name: Поставка ТМЦ со склада по запросу
+            trigger_items:
+              - type: API
+                api: ITEMS_REPLENISHMENT_REQUEST
+    systems:
+      - INV_ACC
+

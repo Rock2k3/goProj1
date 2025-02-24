@@ -1,0 +1,5 @@
+automated_capability_business:
+  PP:
+    scenarios:
+      - id: APPLICATION_SUBMITTING
+        sla: 15

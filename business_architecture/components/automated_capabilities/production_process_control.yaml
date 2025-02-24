@@ -1,0 +1,140 @@
+automated_capability:
+  PPC:
+    title: Контроль производственного процесса
+    owner_block: Химчистка
+    owner_tribe: Производственный отдел
+    description: ' Блок предназначен для автоматизации и оптимизации контроля производственных процессов.'
+    status: Эксплуатация
+    responsibles:
+      owner: "10"
+      Methodologist: "10"
+      EAArchitect: "21"
+      solution_architector: "32"
+      development_team:
+        contactInfo:
+          - "PPC_team@ourLoundry.ru"
+        team_members:
+          - "43"
+      support_team:
+        IFT:
+          contactInfo:
+            - "PPC_team@ourLoundry.ru"
+          team_members:
+            - "54"
+        PSI:
+          contactInfo:
+            - "PPC_team@ourLoundry.ru"
+          team_members:
+            - "54"
+        PROM:
+          contactInfo:
+            - "PPC_team@ourLoundry.ru"
+          team_members:
+            - "54"
+    business_functions:
+      ORDER_STATUS_PRODUCTION_PROCESS_CONTROL:
+        title: Хранение состояния заказа/контроль производственного процесса
+        description: ' Функция отвечает за хранение и обновление состояния заказов на всех этапах производственного процесса, включая контроль качества, отслеживание прогресса и обеспечение прозрачности для клиентов и управления.'
+    systems:
+      - OLM
+    business_entities:
+        ORDER:
+          summary: Заказ-наряд
+          description: Заказ-наряд клиента на выполнение работ с набором услуг химчистки.
+    scenarios:
+      - id: APPLICATION_PROCESSING
+        children_scenario_allowed: true
+        business_function: ORDER_STATUS_PRODUCTION_PROCESS_CONTROL
+        title: Прием заявки клиента
+        status: Эксплуатация
+        automated_level: auto
+        description: Прием заявки клиента на выполнение работ с набором услуг химчистки.
+        business_events_produced:
+          - ORDER_CREATED
+        trigger_groups:
+          - group_name: Инициализация
+            trigger_items:
+              - type: event
+                event:
+                  source: PP
+                  source_scenario: APPLICATION_SUBMITTING
+                  source_scenario_state: POSITIVE_ENDING
+                  source_activity_type: ACTIVITY_RESULT
+                title: Получен заказ от клиента
+                description: Инициализация сценария по получению заявки от клиента
+      - id: ORDER_PROCESSING
+        children_scenario_allowed: true
+        business_function: ORDER_STATUS_PRODUCTION_PROCESS_CONTROL
+        title: Выполнение работ по заказ-наряду
+        status: Эксплуатация
+        automated_level: auto
+        description: Выполнение работ по заказ-наряду
+        business_events_produced:
+          - ORDER_CHANGED
+        trigger_groups:
+          - group_name: Инициализация
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: APPLICATION_PROCESSING
+                  source_scenario_state: POSITIVE_ENDING
+                  source_activity_type: ACTIVITY_RESULT
+                  status: Эксплуатация
+                title: Получен заказ от клиента
+                description: Инициализация сценария по получению заявки от клиента
+      - id: ORDER_CLOSING
+        children_scenario_allowed: true
+        business_function: ORDER_STATUS_PRODUCTION_PROCESS_CONTROL
+        title: Закрытие заказ-наряда
+        status: Эксплуатация
+        automated_level: auto
+        description: Уведомление клиента о готовности заказа, доставка в ПВЗ и закрытие.
+        business_events_produced:
+          - ORDER_COMPLETED
+        trigger_groups:
+          - group_name: Инициализация
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: ORDER_PROCESSING
+                  source_scenario_state: POSITIVE_ENDING
+                  source_activity_type: ACTIVITY_RESULT
+                  status: Эксплуатация
+                title: Получен заказ от клиента
+                description: Инициализация сценария по получению заявки от клиента
+        integrations_used:
+          - source: LOG
+            source_scenario: DELIVERY
+            source_activity_type: ACTIVITY_RESULT
+            source_scenario_state: POSITIVE_ENDING
+            status: Эксплуатация
+    business_api:
+      - id: ORDER_CREATED
+        api_type: business_event
+        title: Создание заказ-наряда
+        business_entity: ORDER
+        status: Эксплуатация
+      - id: ORDER_CHANGED
+        api_type: business_event
+        title: Изменение состояния заказ-наряда
+        business_entity: ORDER
+        status: Эксплуатация
+      - id: ORDER_COMPLETED
+        api_type: business_event
+        title: Заказ-наряд закрыт и не может быть изменен
+        business_entity: ORDER
+        status: Эксплуатация
+      - id: GET_ORDER_DATA
+        api_type: getter
+        title: Получение данных заказ-наряда
+        business_entity: ORDER
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: ORDER_CANCELLATION
+        api_type: setter
+        business_entity: ORDER
+        title: Отмена заказа с проверкой возможности отменить заказ-наряд
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация

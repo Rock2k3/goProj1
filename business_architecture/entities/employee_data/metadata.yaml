@@ -1,0 +1,26 @@
+entities:
+  employee_data:
+    schema:
+      patternProperties:
+        ^[0-9]*$:
+          type: object
+          description: Табельный номер сотрудника из adressbook без ведущих нолей
+          properties:
+            FIO:
+              title: ФИО сотрудника
+              type: string
+            Profile:
+              title: Сcылка на профиль
+              description: Это ссылка на профиль сотрудника в adressbook.\n
+                - https://addressbook/
+              type: string
+          required:
+            - FIO
+            - Profile
+          additionalProperties: true
+
+    objects:
+        employee_data:
+          route: "/"
+          title: Employee
+          symbol: >

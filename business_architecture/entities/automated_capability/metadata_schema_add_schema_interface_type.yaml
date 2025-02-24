@@ -1,0 +1,26 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  automated_capability:
+    # Дополнительная схема для валидатора
+    schema_interface_type:
+      type: object
+      properties:
+        interfaces:
+          title: Интерфейсы (API)
+          description: >
+            \n
+            Интерфейсы, которые BBB предоставляет внешним потребителям.
+          type: array
+          items:
+            type: object
+            properties:
+              interface_type:
+                title: Тип интерфейса
+                enum:
+                  - event
+                  - API
+            required:
+              - interface_type
+            additionalProperties: true

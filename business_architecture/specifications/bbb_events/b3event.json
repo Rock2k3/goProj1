@@ -1,0 +1,725 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "http://bbb.sber.ru/b3event/2.1.3/root.json",
+  "description": "Сообщение",
+  "type": "object",
+  "properties": {
+    "header": {
+      "description": "Заголовок сообщения",
+      "$ref": "#/definitions/Header_Type"
+    },
+    "body": {
+      "description": "Тело сообщения",
+      "$ref": "#/definitions/Body_Type"
+    }
+  },
+  "required": [
+    "header",
+    "body"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "Header_Type": {
+      "description": "Заголовок сообщения",
+      "type": "object",
+      "properties": {
+        "evtType": {
+          "description": "Тип события. ChangeEvent - depricated, новых сообщений с этим типом быть не должно.",
+          "enum": [
+            "ActivityEvent",
+            "BusinessEvent",
+            "ChangeEvent"
+          ]
+        },
+        "evtVersion": {
+          "description": "Версия схемы события",
+          "type": "string",
+          "pattern": "[0-9.]{1,5}"
+        },
+        "srcModule": {
+          "description": "Код BBB-источника события",
+          "$ref": "#/definitions/BBB_ID_Type"
+        },
+        "evtId": {
+          "description": "Уникальный идентификатор события",
+          "type": "string",
+          "format": "uuid"
+        },
+        "evtDate": {
+          "description": "Дата и время возникновения события (Unix time)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32532753851
+        },
+        "sndDate": {
+          "description": "Дата и время отправки события источником (Unix time)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32532753851
+        },
+        "parentId": {
+          "description": "Идентификатор события, повлекшего за собой возникновение данного события",
+          "type":"string",
+          "format": "uuid"
+        },
+        "prevEvtId": {
+          "description": "Идентификатор предыдущего события в потоке событий источника (для обнаружения gap'а), дубликатом которого является текущее событие. Заполняется при повторной отправке того же события.",
+          "type":"string",
+          "format": "uuid"
+        },
+        "activityId": {
+          "description": "Заполняется адаптером, в случае если нету parentEvtId, иначе переиспользуется. В случае если BBB не использует «каркас BBB», то должен сам реализовывать данную логику.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "parentActivityId": {
+          "description": "Родительский идентификатор активности, в рамках которой BBB в своем сценарии создал новую activityId.",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "evtType",
+        "evtVersion",
+        "srcModule",
+        "evtId",
+        "evtDate",
+        "sndDate",
+        "activityId"
+      ],
+      "additionalProperties": false
+    },
+    "Body_Type": {
+      "description": "Тело сообщения",
+      "type": "object",
+      "properties": {
+        "objectId": {
+          "description": "Прикладной ID события. Например, rqUID из КСШ.",
+          "type": "string",
+          "maxLength": 110
+        },
+        "eventObject": {
+          "description": "Объект, по которому произошло событие",
+          "$ref": "#/definitions/EventObject_Type"
+        },
+        "parentProcess": {
+          "description": "Контейнер с информацией о процессе-потребителе сервиса/процесса/BBB",
+          "$ref": "#/definitions/ParentProcess_Type"
+        },
+        "service": {
+          "description": "Контейнер с основной информацией об исполняемом сервисе/процессе/BBB, породившем событие",
+          "$ref": "#/definitions/Service_Type"
+        },
+        "type": {
+          "description": "Тип события. Для activity - фиксированный набор событий, для business - произвольный.",
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 50
+            },
+            {
+              "enum": [
+                "ACTIVITY_INIT",
+                "ACTIVITY_IN_ACTION",
+                "ACTIVITY_STATE",
+                "ACTIVITY_STATE_SLA",
+                "ACTIVITY_RESULT",
+                "ACTIVITY_ERRORS",
+                "ACTIVITY_EXECUTE_SCENARIO_FAILED",
+                "ACTIVITY_BRANCHED",
+                "ACTIVITY_MERGED"
+              ]
+            }
+          ]
+        },
+        "subTypeEvent": {
+          "description": "Подтип события",
+          "$ref": "#/definitions/SubTypeEvent_Type"
+        },
+        "status": {
+          "description": "Статус работы сценария BBB, в котором опубликовано событие.",
+          "enum": [
+            "DEBUG_MODE",
+            "TEST_MODE",
+            "NORMAL_MODE",
+            "ERROR_MODE",
+            "MALFUNCTION"
+          ]
+        },
+        "description": {
+          "description": "Описание события",
+          "type": "string",
+          "maxLength": 4000
+        },
+        "dateTime": {
+          "description": "Дата/время возникновения события",
+          "type": "string",
+          "format": "date-time"
+        },
+        "businessDate": {
+          "description": "Дата/время возникновения бизнес-события",
+          "type": "string",
+          "format": "date-time"
+        },
+        "expertises": {
+          "description": "Список результатов экспертизы события",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "description": "Результат экспертизы события",
+            "$ref": "#/definitions/Expertise_Type"
+          }
+        },
+        "objects": {
+          "description": "Список объектов события",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "description": "Объект события",
+            "$ref": "#/definitions/Object_Type"
+          }
+        },
+        "messages": {
+          "description": "Список верхнеуровневых сообщений со статусом обработки, сформированное в процессе",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "description": "Верхнеуровневое сообщение",
+            "$ref": "#/definitions/Message_Type"
+          }
+        }
+      },
+      "required": [
+        "service",
+        "type",
+        "dateTime",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "EventObject_Type": {
+      "description": "Объект, по которому произошло событие",
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "description": "ID объекта",
+          "type": "string",
+          "maxLength": 110
+        },
+        "link": {
+          "description": "Ссылка для получения объекта по API URI",
+          "type": "string",
+          "maxLength": 500
+        },
+        "type": {
+          "description": "Тип объекта. Идентификатор уникальный в рамках текущего BBB.",
+          "type": "string",
+          "maxLength": 50,
+          "examples": [
+            "RWACalcResult",
+            "risk-object"
+          ]
+        },
+        "subType": {
+          "description": "Подтип объекта",
+          "type": "string",
+          "maxLength": 50
+        },
+        "addSourceIds": {
+          "description": "Список дополнительных ID объектов",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "description": "Дополнительный ID объекта",
+            "$ref": "#/definitions/AddSourceId_Type"
+          }
+        }
+      },
+      "required": [
+        "sourceId",
+        "type",
+        "link"
+      ],
+      "additionalProperties": false
+    },
+    "ParentProcess_Type": {
+      "description": "Информация о процессе-потребителе сервиса/процесса/BBB",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Идентификатор экземпляра процесса/бизнес-сценария в соответствии со scenario",
+          "type": "string",
+          "maxLength": 110
+        },
+        "scenario": {
+          "description": "Код бизнес-сценария внешнего BBB, в рамках которого было выполнено определенное действие, или изменен статус в текущем BBB. К примеру, RequestManage (управление заявкой)",
+          "$ref": "#/definitions/Scenario_ID_Type"
+        },
+        "sourceSystemId": {
+          "description": "Идентификатор родительского BBB",
+          "$ref": "#/definitions/BBB_ID_Type"
+        }
+      },
+      "required": [
+        "id",
+        "scenario",
+        "sourceSystemId"
+      ],
+      "additionalProperties": false
+    },
+    "Service_Type": {
+      "description": "Основная информацией об исполняемом сервисе/процессе/BBB, породившем событие",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Технический идентификатор экземпляра бизнес-сценария",
+          "type": "string",
+          "maxLength": 110
+        },
+        "mode": {
+          "description": "Режим выполненения бизнес-сценария",
+          "enum": [
+            "MANUAL",
+            "SEMI_AUTO",
+            "AUTO"
+          ]
+        },
+        "acceptanceMode": {
+          "description": "Режим учета сценария в акцептованном внешнем сценарии",
+          "enum": [
+            "OPTIONAL",
+            "REQUIRED"
+          ]
+        },
+        "scenario": {
+          "description": "Код бизнес-сценария, запущенного в BBB, в рамках определенного типа процесса",
+          "$ref": "#/definitions/Scenario_ID_Type"
+        },
+        "status": {
+          "description": "Статус выполнения бизнес-сценария на уровне BBB",
+          "enum": [
+            "INITIATED",
+            "ACCEPTED",
+            "SCENARIO_CHANGED",
+            "STARTED",
+            "RUNNING",
+            "DATA_WAITING",
+            "EVENT_WAITING",
+            "PAUSED",
+            "HOLD",
+            "POSITIVE_ENDING",
+            "NEUTRAL_ENDING",
+            "NEGATIVE_ENDING",
+            "CANCELLED",
+            "SKIPPED",
+            "IS_ROLLING_BACK",
+            "HAS_ROLLED_BACK",
+            "FAULT"
+          ]
+        },
+        "tasks": {
+          "description": "Массив объектов, описывающий связные задачи, выполняемые в рамках бизнес-сценария",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "description": "Информация по задаче",
+            "$ref": "#/definitions/Task_Type"
+          }
+        },
+        "slaState": {
+          "description": "Информация об SLA",
+          "$ref": "#/definitions/SLAState_Type"
+        }
+      },
+      "required": [
+        "id",
+        "mode",
+        "scenario",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "SubTypeEvent_Type": {
+      "description": "Подтип подсобытия",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Идентификатор подтипа события",
+          "type": "string",
+          "maxLength": 110
+        },
+        "description": {
+          "description": "Описание подтипа события",
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false
+    },
+    "Object_Type": {
+      "description": "Объект события",
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "description": "ID объекта в системе-источнике. Например, для карточки клиента это будет ЕПК ID.",
+          "type": "string",
+          "maxLength": 110
+        },
+        "sourceSystemId": {
+          "description": "ID BBB-источника объекта",
+          "$ref": "#/definitions/BBB_ID_Type"
+        },
+        "link": {
+          "description": "Ссылка для получения объекта по API URI",
+          "type": "string",
+          "maxLength": 500
+        },
+        "status": {
+          "description": "Статус объекта внутри системы источника",
+          "type": "string",
+          "maxLength": 50
+        },
+        "businessId": {
+          "description": "Бизнес-ID объекта",
+          "type": "string",
+          "maxLength": 110
+        },
+        "type": {
+          "description": "Тип объекта, как он определен в паспорте BBB.",
+          "type": "string",
+          "maxLength": 50
+        },
+        "subType": {
+          "description": "Подтип объекта",
+          "type": "string",
+          "maxLength": 50
+        },
+        "date": {
+          "description": "Дата создания объекта",
+          "type": "string",
+          "format": "date-time"
+        },
+        "approvalDate": {
+          "description": "Дата утверждения объекта",
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "description": "Версия объекта",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000
+        },
+        "user": {
+          "description": "Пользователь",
+          "$ref": "#/definitions/Employee_Type"
+        }
+      },
+      "required": [
+        "sourceId",
+        "sourceSystemId",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "Employee_Type": {
+      "description": "Данные пользователя",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID пользователя",
+          "type": "string",
+          "maxLength": 110
+        },
+        "keyId": {
+          "description": "Ключ авторизации пользователя",
+          "type": "string",
+          "maxLength": 110
+        },
+        "keyIdType": {
+          "description": "Тип ключа, по умолчанию PERSON_NUM (табельный номер)",
+          "type": "string",
+          "default": "PERSON_NUM",
+          "maxLength": 50
+        },
+        "role": {
+          "description": "Роль пользователя",
+          "type": "string",
+          "maxLength": 50
+        }
+      },
+      "required": [
+        "keyId",
+        "keyIdType"
+      ],
+      "additionalProperties": false
+    },
+    "Expertise_Type": {
+      "description": "Результат экспертизы события. Может быть использован для подробного описания результата, например, для ACTIVITY_RESULT со статусом NEGATIVE можно подробно раскрыть причину этого статуса.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Идентификатор заключения (проведенной экспертизы)",
+          "type": "string",
+          "maxLength": 110
+        },
+        "employee": {
+          "description": "Объект с информацией о работнике (сотруднике)",
+          "$ref": "#/definitions/Employee_Type"
+        },
+        "judgement": {
+          "description": "Мотивированное суждение",
+          "type": "string",
+          "maxLength": 4000
+        },
+        "dateTime": {
+          "description": "Дата/время проведения экспертизы",
+          "type": "string",
+          "format": "date-time"
+        },
+        "influence": {
+          "description": "Влияние на зону",
+          "type": "string",
+          "maxLength": 20
+        }
+      },
+      "required": [
+        "id",
+        "dateTime"
+      ],
+      "additionalProperties": false
+    },
+    "AddSourceId_Type": {
+      "description": "Дополнительный ID объекта",
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "description": "Идентификатор объекта, являющегося основной причиной генерации данного события. К примеру, идентификатор заявки клиента",
+          "type": "string",
+          "maxLength": 110
+        },
+        "sourceSystemId": {
+          "description": "Идентификатор системы-владельца идентификатора основного объекта события. К примеру, SberBusiness",
+          "type": "string",
+          "maxLength": 110
+        },
+        "type": {
+          "description": "Тип идентификатора",
+          "type": "string",
+          "maxLength": 110
+        }
+      },
+      "required": [
+        "sourceId",
+        "sourceSystemId"
+      ],
+      "additionalProperties": false
+    },
+    "Task_Type": {
+      "description": "Информация по задаче",
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "description": "Идентификатор задачи в системе источнике",
+          "type": "string",
+          "maxLength": 110
+        },
+        "sourceSystemId": {
+          "description": "Идентификатор BBB-источника",
+          "$ref": "#/definitions/BBB_ID_Type"
+        },
+        "sourceStatus": {
+          "description": "Статус задачи в системе источнике",
+          "type": "string",
+          "maxLength": 50
+        },
+        "changeType": {
+          "description": "Тип изменения задачи",
+          "type": "string",
+          "maxLength": 100
+        },
+        "changeReason": {
+          "description": "Причина изменения задачи",
+          "type": "string",
+          "maxLength": 4000
+        },
+        "url": {
+          "description": "Ссылка URL для открытия окна с отображение интерфейса задачи",
+          "type": "string",
+          "maxLength": 500
+        },
+        "assignee": {
+          "description": "Объект с данными исполнителя задачи",
+          "$ref": "#/definitions/Employee_Type"
+        },
+        "sla": {
+          "description": "Сроки завершения задачи",
+          "$ref": "#/definitions/SLA_Type"
+        }
+      },
+      "required": [
+        "sourceId",
+        "sourceSystemId",
+        "sourceStatus"
+      ],
+      "additionalProperties": false
+    },
+    "SLAState_Type": {
+      "description": "Информация по SLA",
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "Статус SLA",
+          "enum": [
+            "INIT",
+            "RE_ESTIMATED",
+            "EXPIRED",
+            "STARTED"
+          ]
+        },
+        "from": {
+          "description": "Дата и время начала отсчета",
+          "type":"string",
+          "format": "date-time"
+        },
+        "to": {
+          "description": "Предварительно расчитанная дата и время завершения SLA",
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationValue": {
+          "description": "Продолжительность SLA в единицах, указанных в durationUnit",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000
+        },
+        "durationUnit": {
+          "description": "Единица измерения durationValue",
+          "enum": [
+            "MINUTES",
+            "HOURS",
+            "DAYS",
+            "WORKING_HOURS",
+            "WORKING_DAYS"
+          ]
+        },
+        "passedPercentage": {
+          "description": "Пройдено SLA в процентах",
+          "type":"integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "status",
+        "durationValue",
+        "durationUnit"
+      ],
+      "additionalProperties": false
+    },
+    "SLA_Type": {
+      "description": "Сроки завершения задачи",
+      "type": "object",
+      "properties": {
+        "deadline": {
+          "description": "Прогнозируемая дата исполнения задачи",
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "deadline"
+      ],
+      "additionalProperties": false
+    },
+    "Message_Type": {
+      "description": "Верхнеуровневое сообщение",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "Код ошибки/сообщения",
+          "type": "string",
+          "maxLength": 50
+        },
+        "category": {
+          "description": "Категория сообщения",
+          "type": "string",
+          "maxLength": 2048
+        },
+        "text": {
+          "description": "Детальное описание ошибки/сообщения",
+          "type": "string",
+          "maxLength": 2048
+        },
+        "severity": {
+          "description": "Серьезность ошибки (INFO, ERROR, CRIT, BLOCKER)",
+          "enum": [
+            "INFO",
+            "ERROR",
+            "CRITICAL",
+            "BLOCKER"
+          ]
+        },
+        "sourceSystemId": {
+          "description": "КЭ системы, в которой произошел сбой",
+          "type": "string",
+          "maxLength": 110
+        },
+        "shortDescription": {
+          "description": "Текст ошибки/сообщения",
+          "type":"string",
+          "maxLength": 255
+        },
+        "embeddedMessages": {
+          "description": "Массив объектов message с дополнительной информацией по текущей категории сообщения",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "description": "доп. информация по категории сообщения",
+            "$ref": "#/definitions/Message_Type"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "category",
+        "severity",
+        "sourceSystemId"
+      ],
+      "additionalProperties": false
+    },
+    "BBB_ID_Type": {
+      "description": "Код BBB",
+      "type": "string",
+      "pattern": "^[A-Z0-9_]{1,20}$",
+      "examples": [
+        "MONBLAN",
+        "AML",
+        "B3ECOSECVECTOR"
+      ]
+    },
+    "Scenario_ID_Type": {
+      "description": "Код бизнес-сценария BBB",
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^[a-zA-Z0-9_.:-]{1,256}$",
+      "examples": [
+        "DMCB_AUTO",
+        "DEVIATIONPROCESSING",
+        "FZNFACT:FactIndicatorsSend"
+      ]
+    }
+  }
+}

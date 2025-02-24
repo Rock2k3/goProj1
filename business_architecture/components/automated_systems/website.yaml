@@ -1,0 +1,9 @@
+automated_system:
+  WEB:
+    name: 'Сайт "Наша химчистка"'
+    nickname: СНХ
+    ci_id: CI00000009
+    description: Веб-сайт компании, предоставляющий информацию о новостях, объявлениях и услугах химчистки
+    full_name: 'Сайт "Наша химчистка"'
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

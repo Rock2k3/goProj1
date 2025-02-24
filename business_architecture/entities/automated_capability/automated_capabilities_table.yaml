@@ -1,0 +1,25 @@
+docs:
+  automated_capabilities_table_list:
+    type: table
+    headers:
+      - value: title
+        text: BBB
+        sortable: true
+        align: left
+        width: 10%
+        link: link_to_automated_capability
+
+      - value: description
+        text: Описание
+        sortable: false
+        align: left
+        width: 40%
+
+    location: ""
+    source: datasets.automated_capabilities_list
+
+#  automated_capabilities_list:
+#    location: Business Building Blocks
+#    type: markdown
+#    source: automated_capabilities_table.md
+

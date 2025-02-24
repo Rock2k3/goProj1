@@ -1,0 +1,18 @@
+source: >
+  (
+    $REPO := $;
+    [$distinct([automated_capability.$spread().(
+      $AUTOMATED_CAPABILITY_ID := $keys()[0];
+  
+      $capabilities := $.*.{
+        "id": $AUTOMATED_CAPABILITY_ID,
+        "title": title,
+        "description": description,
+        "owner_block": owner_block,
+        "owner_tribe": owner_tribe,
+        "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID
+  
+      };
+    )])^(id)]
+  
+  )

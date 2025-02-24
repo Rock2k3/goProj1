@@ -1,0 +1,9 @@
+automated_system:
+  CRSM:
+    name: CRM система и колл-центр
+    nickname: CRM_СС
+    ci_id: CI00000003
+    description: Комплексная система для управления взаимоотношениями с клиентами и поддержки колл-центра
+    full_name: CRM система и колл-центр
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

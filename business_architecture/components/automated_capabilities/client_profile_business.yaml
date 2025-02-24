@@ -1,0 +1,5 @@
+automated_capability_business:
+  CP:
+    scenarios:
+      - id: CLIENT_PROFILE_UPDATE
+        sla: 3

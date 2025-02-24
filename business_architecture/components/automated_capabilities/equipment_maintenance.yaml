@@ -1,0 +1,120 @@
+automated_capability:
+  EQM:
+    title: Обслуживание оборудования
+    owner_block: Химчистка
+    owner_tribe: Технический отдел
+    description: 'Блок предназначен для автоматизации и оптимизации процессов обслуживания и ремонта производственного оборудования.'
+    status: Эксплуатация
+    responsibles:
+      owner: "4"
+      Methodologist: "4"
+      EAArchitect: "15"
+      solution_architector: "26"
+      development_team:
+        contactInfo:
+          - "EQM_team@ourLoundry.ru"
+        team_members:
+          - "37"
+      support_team:
+        IFT:
+          contactInfo:
+            - "EQM_team@ourLoundry.ru"
+          team_members:
+            - "48"
+        PSI:
+          contactInfo:
+            - "EQM_team@ourLoundry.ru"
+          team_members:
+            - "48"
+        PROM:
+          contactInfo:
+            - "EQM_team@ourLoundry.ru"
+          team_members:
+            - "48"
+    business_functions:
+      EQUIPMENT_MAINTENANCE:
+        title: Обслуживание оборудования
+        description: 'Функция отвечает за организацию и контроль процесса обслуживания и ремонта оборудования, включая планирование, выполнение работ, контроль за состоянием оборудования и регистрацию выполненных операций.'
+    business_entities:
+      EQUIPMENT_MAINTENANCE_JOB:
+        summary: Задача на обслуживание и ремонт оборудования
+    scenarios:
+      - id: EQUIPMENT_MAINTENANCE
+        automated_level: manual
+        status: Эксплуатация
+        business_function: EQUIPMENT_MAINTENANCE
+        title: Обслуживание оборудования
+        children_scenario_allowed: false
+        trigger_groups:
+          - group_name: Регулярное обслуживание
+            trigger_items:
+              - type: inner_logic
+                title: Выполнение обслуживания по расписанию
+                description: Обслуживание выполняется в соответсвии с регламентом, установленным организацией.
+          - group_name: Внеплановое обслуживание отдела химчистки
+            trigger_items:
+              - type: event
+                event:
+                  source: CLE
+                  source_scenario: DRY_CLEANING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+              - type: event
+                event:
+                  source: CLE
+                  source_scenario: DRY_CLEANING
+                  source_activity_type: ACTIVITY_ERRORS
+                  source_scenario_state: HOLD
+          - group_name: Внеплановое обслуживание отдела Глажки
+            trigger_items:
+              - type: event
+                event:
+                  source: IRON
+                  source_scenario: IRONING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+              - type: event
+                event:
+                  source: IRON
+                  source_scenario: IRONING
+                  source_activity_type: ACTIVITY_ERRORS
+                  source_scenario_state: HOLD
+          - group_name: Внеплановое обслуживание отдела Стирки
+            trigger_items:
+              - type: event
+                event:
+                  source: WSH
+                  source_scenario: WASHING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+              - type: event
+                event:
+                  source: WSH
+                  source_scenario: WASHING
+                  source_activity_type: ACTIVITY_ERRORS
+                  source_scenario_state: HOLD
+          - group_name: Запрос на внеплановое обслуживание
+            trigger_items:
+              - type: API
+                api: EQUIPMENT_MAINTENANCE_REQUEST
+
+    business_api:
+      - id: EQUIPMENT_MAINTENANCE_JOB_UPDATE
+        api_type: business_event
+        business_entity: EQUIPMENT_MAINTENANCE_JOB
+        title: Изменение статуса задачи на обслуживание оборудования
+        status: Эксплуатация
+      - id: EQUIPMENT_MAINTENANCE_REQUEST
+        api_type: setter
+        business_entity: EQUIPMENT_MAINTENANCE_JOB
+        title: Запрос на внеплановое обслуживание оборудования
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: EQUIPMENT_MAINTENANCE_JOB_DETAILS
+        api_type: getter
+        business_entity: EQUIPMENT_MAINTENANCE_JOB
+        schemaURL: https://petstore.swagger.io/
+        title: Детали по задаче на обслуживание оборудования
+        status: Эксплуатация
+    systems:
+      - TMS

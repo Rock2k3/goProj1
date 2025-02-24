@@ -1,0 +1,73 @@
+automated_capability:
+  IRON:
+    title: Глажка
+    owner_block: Химчистка
+    owner_tribe: Производственный отдел
+    description: 'Блок предназначен для автоматизации и оптимизации процессов глажки и финишной обработки одежды.'
+    status: Эксплуатация
+    responsibles:
+      owner: "5"
+      Methodologist: "5"
+      EAArchitect: "16"
+      solution_architector: "27"
+      development_team:
+        contactInfo:
+          - "IRON_team@ourLoundry.ru"
+        team_members:
+          - "38"
+      support_team:
+        IFT:
+          contactInfo:
+            - "IRON_team@ourLoundry.ru"
+          team_members:
+            - "49"
+        PSI:
+          contactInfo:
+            - "IRON_team@ourLoundry.ru"
+          team_members:
+            - "49"
+        PROM:
+          contactInfo:
+            - "IRON_team@ourLoundry.ru"
+          team_members:
+            - "49"
+    business_functions:
+      IRONING:
+        title: Глажка
+        description: 'Функция отвечает за организацию и контроль процесса глажки одежды, включая выбор режимов глажки, контроль качества и отслеживание производственных показателей.'
+    business_entities:
+      IRONING_JOB:
+        summary: Задача на глажку
+    scenarios:
+      - id: IRONING
+        title: Глажка одежды
+        automated_level: semi_auto
+        children_scenario_allowed: true
+        status: Эксплуатация
+        business_function: IRONING
+        description: Глажка одежды и других тканевых вещей
+        trigger_groups:
+          - group_name: Начало работ над заказом
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: ORDER_PROCESSING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+        business_events_produced:
+          - IRONING_JOB_UPDATE
+    business_api:
+      - id: IRONING_JOB_UPDATE
+        api_type: business_event
+        business_entity: IRONING_JOB
+        title: Изменение статуса задачи на глажку
+        status: Эксплуатация
+      - id: IRONING_JOB_DETAILS
+        api_type: getter
+        business_entity: IRONING_JOB
+        title: Получение деталей задачи на глажку
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+    systems:
+      - TMS

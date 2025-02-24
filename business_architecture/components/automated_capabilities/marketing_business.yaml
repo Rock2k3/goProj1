@@ -1,0 +1,5 @@
+automated_capability_business: 
+  MRKT:
+    scenarios:
+      - id: PRICE_LIST_UPDATE
+        sla: 3

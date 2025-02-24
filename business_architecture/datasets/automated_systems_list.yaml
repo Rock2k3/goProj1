@@ -1,0 +1,20 @@
+datasets:
+  # Получаем список ФБС с линками на карточку и карту
+  datasets.automated_systems_list:
+    source: >
+      ([
+              automated_system.$spread().(
+              $automated_system_id:= $keys()[0];
+
+              $.*.{ 
+                "id_as": $automated_system_id,
+                "name": name,
+                "full_name": full_name,
+                "nickname": nickname,
+                "system_type": system_type,
+                "ci_id": ci_id,
+                "description": description,
+                "as_ref": as_ref
+                }
+                )
+            ])

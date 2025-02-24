@@ -1,0 +1,5 @@
+# Подключаем определяемые сущности метамодели
+imports:
+  - bbb_goal_report.yaml
+  - bbb_maps.yaml
+  - general.yaml

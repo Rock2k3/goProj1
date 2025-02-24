@@ -1,0 +1,12 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  automated_capability:
+
+    objects: # Декларирование объектов сущности
+      automated_capability: # Объектом сущности является аФБС - "automated_capability"
+        route: "/"              # Путь к массиву объектов в Data Lake относительно пути /interactions
+        # Если route не указан, то по умолчанию он равен "/"
+        title: BBB   # Название объекта
+        symbol: >

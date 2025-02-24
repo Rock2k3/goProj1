@@ -1,0 +1,5 @@
+automated_capability_business:
+  EQM:
+    scenarios:
+      - id: EQUIPMENT_MAINTENANCE
+        sla: 45

@@ -1,0 +1,38 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  automated_capability:
+    # Дополнительная схема для валидатора
+    schema_header_1:
+      type: object
+      properties: # со следующей структурой
+        title:
+          title: Наименование
+          type: string
+        status:
+          title: Статус ЖЦ
+          enum:
+            - Планирование
+            - Проектирование
+            - Разработка
+            - Эксплуатация
+            - Выведение
+            - Выведен
+          default: Проектирование
+        description:
+          title: Описание
+          type: string
+        owner_block:
+          title: Блок-владелец
+          type: string
+        owner_tribe:
+          title: Трайб-владелец
+          type: string
+      required:
+        - title
+        - status
+        - description
+        - owner_block
+        - owner_tribe
+      additionalProperties: true

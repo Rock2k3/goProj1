@@ -1,0 +1,1 @@
+![Метамодель BBB](@entity/automated_capability/plantuml_diagram_scenario_environment?id={{id}}&scenario_id={{Scenario_id}})

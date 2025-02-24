@@ -1,0 +1,103 @@
+automated_capability:
+  CLS:
+    title: Коммуникации с клиентом
+    owner_block: Химчистка
+    owner_tribe: Отдел обслуживания клиентов
+    description: 'Блок предназначен для автоматизации и оптимизации процессов взаимодействия с клиентами.'
+    status: Эксплуатация
+    responsibles:
+      owner: "3"
+      Methodologist: "3"
+      EAArchitect: "14"
+      solution_architector: "25"
+      development_team:
+        contactInfo:
+          - "CLS_team@ourLoundry.ru"
+        team_members:
+          - "36"
+      support_team:
+        IFT:
+          contactInfo:
+            - "CLS_team@ourLoundry.ru"
+          team_members:
+            - "47"
+        PSI:
+          contactInfo:
+            - "CLS_team@ourLoundry.ru"
+          team_members:
+            - "47"
+        PROM:
+          contactInfo:
+            - "CLS_team@ourLoundry.ru"
+          team_members:
+            - "47"
+    business_functions:
+      CLIENT_COMMUNICATION_MANAGEMENT:
+        title: Коммуникации с клиентом
+        description: ' Функция отвечает за организацию и контроль коммуникаций с клиентами, включая прием и обработку запросов, предоставление информации и поддержку клиентов.'
+    business_entities:
+      COMMUNICATION:
+        summary: Коммуникация с клиентом
+    scenarios:
+      - id: COMMUNICATION_WITH_CLIENT
+        status: Эксплуатация
+        title: Входящая коммуникация с клиентом
+        description: "В рамках работы с обращением, оператор может предоставить клиенту информацию по услугам Химчистки и их стоимости,
+          информацию по состоянию заказа, обновить данные в профиле клиента, а так же отменить заказ, если это еще возможно"
+        children_scenario_allowed: false
+        business_function: CLIENT_COMMUNICATION_MANAGEMENT
+        automated_level: manual
+        trigger_groups:
+          - group_name: Обращение клиента по телефону
+            trigger_items:
+              - type: inner_logic
+                title: Звонок клиента
+                description: "Клиент звонит в наш колл-центр и оператор принимает звонок. 
+                  Если возникает очередь и клиент не дожидается, то сценарий не запускается."
+        integrations_used:
+          - source: CP
+            source_business_api: CLIENT_PROFILE_CHANGE_REQUEST
+            status: Эксплуатация
+            description: Отправляем запрос на изменение профиля клиента
+          - source: CP
+            source_business_api: CLIENT_PROFILE_DATA
+            status: Эксплуатация
+            description: Получение данных о клиенте
+          - source: FINANCE
+            source_business_api: GET_PRICE
+            description: Получение актуальной стоимости услуг
+            status: Эксплуатация
+          - source: PPC
+            source_business_api: GET_ORDER_DATA
+            description: Получение текущего статуса заказа клиента
+            status: Эксплуатация
+          - source: ACC
+            source_business_api: GET_REPORT
+            description: Получение отчета по задолженности и оплатам клиента
+            status: Эксплуатация
+          - source: PPC
+            source_business_api: ORDER_CANCELLATION
+            description: Отмена заказа, если это возможно
+            status: Эксплуатация
+          - source: MRKT
+            source_business_api: GET_NEWS
+            description: Получение актуальных новостей для того ,чтобы рассказать о них клиенту
+            status: Эксплуатация
+          - source: LOG
+            source_business_api: DELIVERY_DETAIL
+            description: Получение статуса Доставки в ПВЗ
+            status: Эксплуатация
+    business_api:
+      - id: CLIENT_COMMUNICATION_UPDATE
+        api_type: business_event
+        title: Обновление данных о коммуникации с клиентом
+        business_entity: COMMUNICATION
+        status: Эксплуатация
+      - id: CLIENT_COMMUNICATION_DATA
+        api_type: getter
+        title: Получение данных о коммуникации с клиентом
+        business_entity: COMMUNICATION
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+    systems:
+      - CRSM

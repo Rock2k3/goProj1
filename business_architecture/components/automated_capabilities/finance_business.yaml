@@ -1,0 +1,5 @@
+automated_capability_business:
+  FINANCE:
+    scenarios:
+      - id: PRICE_RECALCULATION
+        sla: 3

@@ -1,0 +1,46 @@
+
+entities:
+  automated_capability:
+    title: Business Building Block
+    description: >
+      \n
+      Business Building Block (BBB) - это один из вариантов Автоматизированных Функциональных Бизнес Способностей (аФБС),
+      которые представляют собой цельные независимые блок и в части бизнес-функциональности, и в части прикладной реализации.
+      С остальными BBB он взаимодействует через синхронные и асинхронные API, которые имеют задокументированный контракт.
+    menu: >
+      (
+        [
+          {
+            "link": "entities/automated_capability/automated_capability_list",
+            "location": "Архитектура/01. Business Building Blocks"
+          },     
+          {
+             "link": "entities/automated_capability/automated_capability_list_API",
+             "location": "Архитектура/02. Бизнес-API BBB"
+          },
+          {
+           "link": "entities/automated_capability/business_functions_table_card",
+           "location": "Архитектура/03. Бизнес-функции"
+          },
+          {
+             "link": "entities/automated_capability/automated_capability_scenarios_table",
+             "location": "Архитектура/05. Сценарии BBB"
+          },
+          {
+             "link": "entities/automated_capability/business_entities_table",
+             "location": "Архитектура/06. Бизнес-сущности BBB"
+          },
+          {
+             "link": "entities/automated_capability/BBB_errors",
+             "location": "Документы/02. Отчеты/01. Сводный отчет по ошибкам"
+           },
+           {
+           "link": "entities/automated_capability/BBB_Map_Errors",
+           "location": "Документы/01. Тепловые карты BBB/01. Карта BBB по корректности описания"
+           },
+           {
+           "link": "entities/automated_capability/BBB_Map_Status",
+           "location": "Документы/01. Тепловые карты BBB/02. Карта BBB по статусам жизненного цикла"
+           }  
+         ]      
+       )

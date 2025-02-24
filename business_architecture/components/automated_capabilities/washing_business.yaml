@@ -1,0 +1,5 @@
+automated_capability_business:
+  WSH:
+    scenarios:
+      - id: WASHING
+        sla: 180

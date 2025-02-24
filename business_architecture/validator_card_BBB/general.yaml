@@ -1,0 +1,81 @@
+rules:
+  validators:
+    General:
+      title: Проверки по BBB
+    General.Main:
+      title: Проверка базовых и архитектурных атрибутов
+    General.Business:
+      title: Проверка бизнес-атрибутов
+    General.base_check:
+      title: Базовый валидатор проверки корректности BBB
+      description: Проверка корректности паспорта BBB по всей схеме.
+      source: >
+        (
+          $validatorBaseCheck($$)
+        )
+    General.Main.API:
+      title: Валидатор API
+      source: >
+        (
+          $validatorAPI($$)
+        )
+    General.Main.scenarios:
+      title: Валидатор сценариев
+      source: >
+        (
+          $validatorScenarios($$)
+        )
+    General.Main.card_header_1:
+      title: Валидатор шапки карточки BBB
+      source: >
+        (
+          $validatorHeader1($$)
+        )
+    General.Main.card_header_2:
+      title: Валидатор шапки карточки BBB_ID
+      source: >
+        (      
+          [$validatorHeader2($$)]
+        )
+    General.Main.Integrations:
+      title: Валидатор INTEGRATIONS
+      source: >
+        (
+         $validatorIntegrations($$) 
+        )
+    General.Main.Unique_Id_Scenario:
+      title: Валидатор проверки уникальности id сценариев
+      source: >
+        (
+         $validator_Unique_Id_Scenario($$)
+        )
+    General.Business.scenarios_business:
+      title: Валидатор сценариев
+      source: >
+        (
+          $validatorScenariosBusiness($$)
+        )
+    General.Business.ScenariosIdBusiness:
+      title: Валидатор проверки переноса id сценариев в бизнес-атрибутах
+      source: >
+        (
+          $validatorScenariosIdBusiness($$)       
+         )
+    General.Business.BBB_ID_Business:
+      title: Валидатор проверки переноса id BBB в бизнес-атрибутах
+      source: >
+        (
+          $validator_BBB_ID_Business($$)
+        )
+    General.Business.bbbSourceBusinessApiExists:
+      title: Использование business API в источнике
+      source: >
+        (
+          $bbbSourceBusinessApiExists($$)
+        )
+    General.Business.bbbSourceScenarioExists:
+      title: Использование source scenario в источнике
+      source: >
+        (
+          $bbbSourceScenarioExists($$)
+        )

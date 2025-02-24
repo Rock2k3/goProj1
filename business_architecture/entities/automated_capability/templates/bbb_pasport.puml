@@ -1,0 +1,18 @@
+@startuml
+<style>
+json {
+  MaximumWidth 200
+  BackGroundColor ivory
+  LineColor Salmon
+  FontName Arial
+}
+title {
+  FontName "Arial"
+  FontSize 16
+  BorderColor black
+  BorderThickness 2
+}
+</style>
+title Визуализация JSON-схемы {{&BBB}}
+json {{&BBB}} {{&schema}}
+@enduml

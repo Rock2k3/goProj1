@@ -1,0 +1,10 @@
+automated_capability_business:
+  PPC:
+    scenarios:
+      - id: APPLICATION_PROCESSING
+        sla: 5
+      - id: ORDER_PROCESSING
+        sla: 4
+      - id: ORDER_CLOSING
+        sla: 3
+

@@ -1,0 +1,122 @@
+# Описываем метаданные ФБС
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  capabilities:
+    # Смысловое описание сущности
+    title: ФБС
+    # Схема данных объектов сущности
+    schema:
+      # Определяем переиспользуемые схемы
+      $defs:
+        # Базовые свойства компонента диаграммы
+        capability-node:
+          type: object
+          properties:
+            title:
+              title: Наименование
+              type: string
+            description:
+              title: Описание
+              type: string
+            boundary:
+              title: Границы
+              type: string
+            product:
+              title: Продукт ЕКОУ
+              $ref: "#/$rels/products.product"
+              description: >
+                Укажите ссылку на продукт ЕКОУ.
+          required:
+            - title
+      # Описываем схему данных объектов сущности
+      patternProperties:
+        "[a-zA-Z0-9_]*(\\.[a-zA-Z0-9_]*)*$": # Шаблон
+          type: object  # аФБС будет объект
+          properties:   # со следующей структурой
+          # Идентификаторы элементов будут структурные,
+          # их структура будет определять уровень ФБС
+          # xxx - L1
+          # xxx.xxx - L2
+          # xxx.xxx.xxx - L3
+          # и так далее (будет добавлена проверка на глубину вложенности)
+          # Исключаем иные идентификаторы
+          # Связь аФБС с другими объектами (аФБС, АС, Роли и т.д.)
+            title:
+              title: Наименование
+              type: string
+            description:
+              title: Описание
+              type: string
+            capability:
+              title: ФБС
+              type: string
+            owner_block:
+              title: Блок-владелец
+              type: string
+            owner_tribe:
+              title: Трайб-владелец
+              type: string
+          additionalProperties: false
+    menu: >
+      (
+        [        
+        {
+        "location": "Документы/04. Карта ФБС/02. Карта ФБС plantuml",
+        "link": "entities/capabilities/FBC_Map_plantuml"
+        }
+         ]
+        )
+    presentations:
+      FBC_Map_plantuml:
+        type: plantuml
+        template: templates/FBC_Map.puml
+        source: >
+          (       
+                  $normalize_title:= function($title) {(
+                        $replace($title, "\"", "'")
+                  )};  
+                  $title_index:= function($title){(
+                       $number($replace($title,/^(\d+\.)*(\d+).*/, "$2"))
+                  )};
+                  $cap_list:= capabilities;
+                  $getChildren := function($parent) {(
+                      $rootElements := $parent
+                       ? (
+                        $parent:= $replace($parent, ".", "\\.");
+                        $parent:= $replace($parent, "/", "\\/");
+                        $re := $eval("/^" & $parent & "\\.[^.]*$/" );
+                        $cap_list.$keys()[$ ~> $re]
+                    ) 
+                    : $cap_list.$keys()[$not($contains("."))];
+                       $elements:= $sort($map($rootElements, function($k) {( {$k: $lookup($cap_list, $k)} )}),function($l,$r){$title_index($l.*.title) > $title_index($r.*.title)}); 
+                       $relations:= $reduce(
+                            $map($elements, function($v,$i,$c){( $i = 0 ? "\n" : "\"" & $normalize_title($c[$i-1].*.title) & "\" -[hidden]-> \"" & $normalize_title($c[$i].*.title) & "\"\n" )}),
+                            function($a, $v) {( $a & $v )});          
+                       $result:= $elements.(
+                           $id:= $keys();
+                           $title:= $normalize_title(*.title);
+                           $children:= $getChildren($id);         
+                           $res_elements:= $children.elements
+                             ? "rectangle \"" & $title & "\" <<$archimate/strategy-capability>> #Strategy  {\n" 
+                                              & $reduce($children.elements,function($a,$v){($a & "\n" & $v )}) & "\n" & "}"          
+                             : "rectangle \"" & $title & "\" <<$archimate/strategy-capability>> #Strategy \n"; 
+                           {"elements": $res_elements, "relations":$children.relations}
+                          );
+          
+                       {
+                         "elements": $result.elements,
+                         "relations": $result.elements ? $relations & "\n" & $reduce($result.relations, function($a, $v) {( $a & $v )})  : $relations
+                       }
+                     )};
+                  $getChildren().{
+                     "code": $reduce(elements, function($a, $v) {( $a & "\n" & $v )}),
+                     "relations": relations
+                  }      
+                )
+    objects: # Декларирование объектов сущности
+      capability: # Объектом сущности является взаимодействие - "capability"
+        route: "/"              # Путь к массиву объектов в Data Lake относительно пути /interactions
+        # Если route не указан, то по умолчанию он равен "/"
+        title: ФБС   # Название объекта
+        symbol: >

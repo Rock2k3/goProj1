@@ -1,0 +1,9 @@
+imports:
+  - commonFunctions/root.yaml
+  - components/root.yaml
+  - datasets/root.yaml
+  - documents/root.yaml
+  - entities/root.yaml
+  - templates/root.yaml
+  - validator_card_BBB/root.yaml
+  - specifications/root.yaml

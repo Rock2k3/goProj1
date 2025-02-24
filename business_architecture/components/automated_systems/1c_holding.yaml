@@ -1,0 +1,9 @@
+automated_system:
+  1C_HOLDING:
+    name: 1С:Управление холдингом
+    nickname: 1С:УХ
+    ci_id: CI00000002
+    description: Система  автомазации управленческого учета, финансового анализа и планирования
+    full_name: 1С:Управление холдингом
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

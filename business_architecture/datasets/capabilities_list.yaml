@@ -1,0 +1,21 @@
+datasets:
+  # Получаем список ФБС с линками на карточку и карту
+  datasets.capabilities_list:
+    source: >
+      (
+        $REPO := $;
+        [$distinct([capabilities.$spread().(
+          $CAPABILITY_ID := $keys()[0];
+
+          $capabilities := $.*.{
+            "id": $CAPABILITY_ID,
+            "title": title,
+            "description": description,
+            "link_to_capability": "/architect/capabilities/" & $CAPABILITY_ID,
+            "capability_map": "Ссылка",
+            "link_to_capabilities_map": "entities/capabilities/context?parent=" & $CAPABILITY_ID
+                        
+          };
+        )])^(id)]
+
+      )

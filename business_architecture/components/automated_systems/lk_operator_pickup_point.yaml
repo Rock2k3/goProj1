@@ -1,0 +1,9 @@
+automated_system:
+  LK_OP_PP:
+    name: ЛК оператора ПВЗ
+    nickname: ЛКОПВЗ
+    ci_id: CI00000005
+    description: Личный кабинет оператора пункта выдачи заказов (ПВЗ), предназначенный для управления процессами приема, хранения и выдачи товаров клиентам
+    full_name: ЛК оператора ПВЗ
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

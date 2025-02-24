@@ -1,0 +1,9 @@
+automated_system:
+  TS:
+    name: Транспортные услуги
+    nickname: ТУ
+    ci_id: CI00000008
+    description: Система  для автоматизации и оптимизации транспортных услуг
+    full_name: Транспортные услуги
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

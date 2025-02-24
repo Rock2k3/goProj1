@@ -1,0 +1,71 @@
+automated_capability:
+  WSH:
+    title: Стирка
+    owner_block: Химчистка
+    owner_tribe: Производственный отдел
+    description: 'Блок предназначен для автоматизации и оптимизации процессов стирки'
+    status: Эксплуатация
+    responsibles:
+      owner: "11"
+      Methodologist: "11"
+      EAArchitect: "22"
+      solution_architector: "33"
+      development_team:
+        contactInfo:
+          - "WSH_team@ourLoundry.ru"
+        team_members:
+          - "44"
+      support_team:
+        IFT:
+          contactInfo:
+            - "WSH_team@ourLoundry.ru"
+          team_members:
+            - "55"
+        PSI:
+          contactInfo:
+            - "WSH_team@ourLoundry.ru"
+          team_members:
+            - "55"
+        PROM:
+          contactInfo:
+            - "WSH_team@ourLoundry.ru"
+          team_members:
+            - "55"
+    business_api:
+      - id: WASHING_JOB_DETAILS
+        api_type: getter
+        business_entity: WASHING_JOB
+        title: Получение детальных данных Задачи на стирку
+        status: Эксплуатация
+      - id: WASHING_JOB_UPDATE
+        api_type: business_event
+        business_entity: WASHING_JOB
+        title: Изменение состояния Задачи на стирку
+        status: Эксплуатация
+    business_entities:
+      WASHING_JOB:
+        summary: Задача на стирку
+    business_functions:
+      WASHING:
+        title: Стирка
+        description: Стрика одежды и других вещей
+    scenarios:
+      - id: WASHING
+        title: Стирка
+        automated_level: semi_auto
+        description: Стрика одежды и других вещей
+        children_scenario_allowed: true
+        status: Эксплуатация
+        trigger_groups:
+          - group_name: Начало работ над заказом
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: ORDER_PROCESSING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+        business_events_produced:
+          - JOB_STATE_UPDATE
+    systems:
+      - TMS

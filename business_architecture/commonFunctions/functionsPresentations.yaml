@@ -1,0 +1,1586 @@
+functions:
+
+  arrayToObjectByID:
+    title: Конвертирует массив объектов в объект, где ключем является значение переданного поля этих объектов.
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: arraySource
+        title: Массив объектов
+        required: true
+      - alias: keyID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        #type: string
+        title: Ключевой атрибут
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: object
+      # Если у объекта в массиве отсутвует заданное в параметре keyID поле, то этот объект не попадет в результат.
+      # При неуникальных значениях keyID у объекта, оти объекты будут слиты в один.
+    code: >
+      (
+          $curArray:= arraySource;
+          $keyID:= keyID;
+
+
+
+          $newArray := $map($curArray, function($v){(
+              $lookup($v, $keyID)?{$lookup($v, $keyID):$v}; 
+          )});
+
+          $result := $newArray ? $merge($newArray) : {}               
+      )
+  Responsibles_info:
+    title: Получение данных об ответственных за BBB сотрудниках
+    params:
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: object
+    code: >
+      (
+          $bbbID := bbbID;
+          $gc    := gc;  
+          $bbb   := $lookup($gc.automated_capability, $bbbID);
+          $empl  := $gc.employee_data;
+
+          $responsible_empl := function($id, $r) {
+            $type($r) = "array" ? $map($r, function($v, $i, $a) {
+              $v != null and $lookup($empl, $string($v)) ? {
+                "id_" & $id: $lookup($empl, $string($v)).FIO & ($i < $count($a) - 1 ? ", " : ""),
+                "id_link_" & $id: $lookup($empl, $string($v)).Profile
+              } : {
+                "id_" & $id: $v != null ? "Сотрудник c табельным номером: **" & $v & "** не найден в справочнике.  Корректно заполните справочник, внеся данные сотрудника в файл \"business_architecture/components/employee_data/employee_data.yaml\"" & ($i < $count($a) - 1 ? ", " : "") : null,
+                "id_link_" & $id: null
+              }
+            }) :
+            $r != null and $lookup($empl, $string($r)) ? 
+              {"id_" & $id: $lookup($empl, $string($r)).FIO,
+              "id_link_" & $id: $lookup($empl, $string($r)).Profile
+            } : {
+              "id_" & $id: $r != null ? "Сотрудник c табельным номером: **" & $r & "** не найден в справочнике. Корректно заполните справочник, внеся данные сотрудника в файл \"business_architecture/components/employee_data/employee_data.yaml\"" : null,
+              "id_link_" & $id: null
+            }
+          };
+
+          {
+            "Responsibles": $map($bbb.responsibles, function($v) {
+              {
+                'EEArchitect': $responsible_empl("EEA", $v.EAArchitect) ? $responsible_empl("EEA", $v.EAArchitect) : [],
+                'Owner': $responsible_empl("owner", $v.owner) ? $responsible_empl("owner", $v.owner) : [],
+                'Methodologist': $responsible_empl("Method", $v.Methodologist) ? $responsible_empl("Method", $v.Methodologist) : [],
+                'SolArch': $responsible_empl("SolArch", $v.solution_architector) ? $responsible_empl("SolArch", $v.solution_architector) : []
+              }
+            })
+          }
+      )
+  Teams_info:
+    title: Получение данных об отвественных за BBB командах
+    params:
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: object
+    code: >
+      (
+                $bbbID := bbbID;
+                $gc    := gc;
+                $bbb   := $lookup($gc.automated_capability, $bbbID);
+                $empl  := $gc.employee_data;
+
+                $responsible_teams := function($id, $r) {
+                    $map($r, function($v) {
+                        {
+                            "Team": $map($v.team_members, function($v, $i, $a) {
+                                $lookup($empl, $string($v)) ? {
+                                    "id_" & $id: $lookup($empl, $string($v)).FIO & ($i < $count($a) - 1 ? ", " : ""),
+                                    "id_link_" & $id: $lookup($empl, $string($v)).Profile
+                                } : {
+                                    "id_" & $id: "Сотрудник c табельным номером: **" & $v & "** не найден в справочнике. Корректно заполните справочник, внеся данные сотрудника в файл \"business_architecture/components/employee_data/employee_data.yaml\"" & ($i < $count($a) - 1 ? ", " : ""),
+                                    "id_link_" & $id: null
+                                }
+                            }),
+                            "Team_link": $map($v.contactInfo, function($v, $i, $a) {
+                                {
+                                    $id & "_Link": $v & ($i < $count($a) - 1 ? ", " : "")
+                                }
+                            })
+                        }
+                    })
+                };
+
+                {
+                    "Responsibles": $map($bbb.responsibles, function($v) {
+                        {
+                            'development_team': $responsible_teams("DevTeam", $v.development_team) ? $responsible_teams("DevTeam", $v.development_team) : [],
+                            'support_team': {
+                                "IFT": $responsible_teams("IFT", $v.support_team.IFT) ? $responsible_teams("IFT", $v.support_team.IFT) : [],
+                                "PSI": $responsible_teams("PSI", $v.support_team.PSI) ? $responsible_teams("PSI", $v.support_team.PSI) : [],
+                                "PROM": $responsible_teams("PROM", $v.support_team.PROM) ? $responsible_teams("PROM", $v.support_team.PROM) : []
+                            }
+                        }
+                    })
+                }
+            )
+  getBBBCardData:
+    title: Получение данных BBB для карточки
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true  # Признак обязательности параметра функции
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      type: object
+    # Код функции
+    code: >
+      (
+        $bbbID :=bbbID;
+        $gc    := gc;
+        $bbb             := $lookup($gc.automated_capability, $bbbID);
+        $bbb_business    := $lookup($gc.automated_capability_business, $bbbID);
+        $bbbInterfaces   := $bbb.interfaces ? $arrayToObjectByID($bbb.interfaces, 'id'):{};
+        $bbbIntegrations := $bbb.integrations ? $arrayToObjectByID($bbb.integrations, 'id'):{};
+        $businesFunctions:= $bbb.business_functions;
+        $BBB_checks      := $ALL_validators($gc);
+        $errors          := $Card_Validators($BBB_checks, $bbbID);
+        $current_errors_in_gr:= $filter($errors.grace_period,function($v,$i,$a){$v > $now()});
+        $grace_p_in:= $count($current_errors_in_gr) >= 1 ?  $count($current_errors_in_gr): 0;
+        $grace_p_out:= $count($errors)-$count($current_errors_in_gr) >=1 ? $count($errors)-$count($current_errors_in_gr): 0;
+        $errorsText      := $grace_p_out >= 1 ? ":x:Присутствуют ошибки:x: (см. закладку Ошибки)":( $grace_p_in >=1 ?  ":warning:Есть ошибки в грейс-периоде:warning: (см. закладу Ошибки)" : ":heavy_check_mark:Ошибок нет:heavy_check_mark:");
+        $errorsCount     := $count($errors);
+      
+        $result:= {
+        	'id': $bbbID,
+            'errorsText':  $errorsText,
+            'errorsCount': $errorsCount,
+        	'header': {
+        		'title': $bbb.title,
+        		'description': $bbb.description,
+        		'capability':  $bbb.capability,
+        		'owner_block': $bbb.owner_block,
+        		'owner_tribe': $bbb.owner_tribe,
+        		'status':      $bbb.status
+            },
+            
+        	'architecture_schemas': $bbb.architecture_schemas,
+      
+             "Employees": $Responsibles_info($gc,$bbbID),
+      
+             "Team": $Teams_info($gc,$bbbID),
+
+        	'business_functions': $map($bbb.business_functions.$keys(), function($v){
+                          {
+                              'bfID': $v,
+                              'bfObject': $v ? $lookup($bbb.business_functions, $v): ""
+                          }
+                      }
+        	),
+        	'scenarios': $map($bbb.scenarios, function($v){
+        		  {'scenarioObject': $v, /* здесь храним весь объект сценария, как он описан */
+                   'planned_date':$bbb_business.scenarios[id=$v.id].planned_date,
+        		   'bfTitle': $lookup($businesFunctions, $v.business_function).title,
+        		   'trigger_groups': [],
+        		   'events_produced': $v.events_produced ? $map($v.events_produced, function($vv){(
+                          $curEvent:= $lookup($bbbInterfaces, $vv);
+                          {
+                              'id': $vv,
+                              'eventObject': $curEvent
+                          }
+                       )}):[],
+                   'integrations_used':$v.integrations_used ? $map($v.integrations_used, function($vv){(
+                          {
+                              'id': $vv.id,
+                              'source': $vv.source,
+                              'source_interface': $vv.source_interface,
+                              'status': $vv.status
+                          })
+                       }):[]
+        		  }
+        		}
+        	  )
+        }      
+      )
+      
+
+  getBBBScenariosData:
+    title: Получение данных BBB по сценарию
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true  # Признак обязательности параметра функции
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+      - alias: scenario_id
+        type: string
+        required: true  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      type: object
+    # Код функции
+    code: >
+      (
+        $bbbID :=bbbID;
+        $gc    := gc;
+        $scenario_id := scenario_id;
+        $bbb             := $lookup($gc.automated_capability, $bbbID);
+        $bbb_business    := $lookup($gc.automated_capability_business, $bbbID);
+        $bbbInterfaces   := $bbb.business_api ? $arrayToObjectByID($bbb.business_api, 'id'):{};
+        $businesFunctions:= $bbb.business_functions;
+            
+        $result:= {
+        	'id': $bbbID,      
+                  
+        	'scenarios': $map($bbb.scenarios[id=$scenario_id], function($v){
+        		  {'scenarioObject': $v, /* здесь храним весь объект сценария, как он описан */
+                   'children_scenario_allowed': $exists($v.children_scenario_allowed) = false ? "": $v.children_scenario_allowed = true ? "Да" : "Нет",
+                   'planned_date':$bbb_business.scenarios[id=$v.id].planned_date,
+                   'sla':$bbb_business.scenarios[id=$v.id].sla,
+        		   'bfTitle': $lookup($businesFunctions, $v.business_function).title,
+        		   'trigger_groups': $map($v.trigger_groups, function($tg){
+                                {
+                                    'group_name': $tg.group_name,
+                                    'trigger_items': $map($tg.trigger_items, function($ti){
+                                        {
+                                            'title': $ti.title,
+                                            'type': $ti.type,
+                                            'api': $ti.api,
+                                            'description': $ti.description,
+                                            'event': $ti.*.source_business_api ? 
+                                              $join([
+                                                $ti.*.source &" ; "& $ti.*.source_business_api
+                                              ]) : ($ti.*.source_scenario ? $join([$ti.*.source & " ; " & $ti.*.source_scenario &" ; "& $ti.*.source_activity_type &" ; "& $ti.*.source_scenario_state ]): " ")
+                                        }
+                                    })
+                                }
+                            }),
+        		   'events_produced': $v.business_events_produced ? $map($v.business_events_produced, function($vv){(
+                          $curEvent:= $lookup($bbbInterfaces, $vv);
+                          {
+                              'id': $vv,
+                              'eventObject': $curEvent
+                          }
+                       )}):[],
+                   'integrations_used': $v.integrations_used ? $map($v.integrations_used, function($vv) {
+                          {
+                            'source': $vv.source,
+                            'source_business_api': $vv.source_business_api ? $vv.source_business_api : "-",
+                            'status': $vv.status,
+                            'source_scenario': $vv.source_scenario ? $vv.source_scenario : "-",
+                            'source_activity_type': $vv.source_activity_type ? $vv.source_activity_type : "-",
+                            'source_scenario_state': $vv.source_scenario_state ? $vv.source_scenario_state : "-"
+                          }
+                        }) : []
+        		  }
+        		}
+        	  )
+        }      
+      )
+
+  Scenario_type:
+    title: Определение типа сценария
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true  # Признак обязательности параметра функции
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+      - alias: scenario_id
+        type: string
+        required: true  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      enum:
+        - autonomus
+        - parent
+        - children
+        - parent_children
+        - empty
+    # Код функции
+    code: >
+      (
+        $gc := gc;
+        $bbbID := bbbID;
+        $scenario_id := scenario_id;
+        $activity_type := "ACTIVITY_INIT";
+        $scenario_state := "INITIATED";
+        $bbb := $lookup($gc.automated_capability, $bbbID);
+        $scenarios := $bbb.scenarios[id=$scenario_id];
+
+        $is_scenario_found := $exists($scenarios);
+
+
+        $is_activity_type_match := $exists($scenarios.*.trigger_items.event.source_activity_type) ? $string($activity_type in $scenarios.*.trigger_items.event.source_activity_type) = "true" : false;
+        $is_scenario_state_match := $exists($scenarios.*.trigger_items.event.source_scenario_state) ? $string($scenario_state in $scenarios.*.trigger_items.event.source_scenario_state) = "true" : false;
+        $children_scenario_allowed := $exists($scenarios.children_scenario_allowed) ? $string($scenarios.children_scenario_allowed) = "true" : false;
+
+        $scenario_type := 
+           $not($is_scenario_found) ? "empty" :
+           $children_scenario_allowed and $is_activity_type_match and $is_scenario_state_match ? "parent_children" :
+           $children_scenario_allowed and $not($is_activity_type_match) and $not($is_scenario_state_match) ? "parent" :
+           $not($children_scenario_allowed) and $is_activity_type_match and $is_scenario_state_match ? "children" :
+           "autonomus";
+
+           $scenario_type
+             )
+
+  Scenarios_activity_event_table:
+    title: Генерация таблицы activity-событий
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Глобальный контекст
+      - alias: scenario_type
+        title: Тип сценария
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: array
+    # Код функции
+    code: >
+      (
+          $gc := gc;
+          $scenario_type := scenario_type;
+          $result := $scenario_type = "empty" ? [] : $mergedeep([$gc.activity_event_table.base, $eval("$gc.activity_event_table." & $scenario_type)]).$spread().(
+              $mergedeep([{"scenario_state": $keys()}, $.*])
+          ).(
+              $mandatoryMarkdown := $match(mandatory, /Обязательно/) ? ":heavy_check_mark:" & mandatory : 
+                                    $match(mandatory, /Не публикуется/) ? ":x:" & mandatory :
+                                    $match(mandatory, /Должен поддерживаться/) ? ":warning:" & mandatory :
+                                    ":ballot_box_with_check:" & mandatory;
+              {
+                  "scenario_state": scenario_state,
+                  "activity_event_type": activity_event_type,
+                  "mandatory": $mandatoryMarkdown,
+                  "comments": comments
+              }
+          )
+      )
+       
+  generateScenariosListTabs:
+    title: Генерация закладок сценариев для карточки BBB
+    params:
+      - alias: gc
+        title: Глобальный контекст
+        required: true
+      - alias: bbb
+        type: string
+        title: Код BBB
+        required: true
+      - alias: curScenariosList
+        type: string
+        title: Текущая закладка сценария # Нужно для выделения текста закладки. Если не указан, то текущая закладка будет первая по алфавиту.
+        required: true
+    result:
+      type: string
+    code: >
+      (
+          $gc   := gc;
+          $bbb  := bbb;
+          $curSC:= curScenariosList;      
+
+          $makeBold := function($text, $bold){
+                  $bold ? "**" & $text & "**" : $text
+              };
+
+          $bbbScenarios := $getBBBCardData($gc, $bbb);
+          $Scenarios:= $sort([$bbbScenarios.*.scenarioObject.id]);
+
+          $tabs:=$map($Scenarios, function($Scenario_id){(
+
+                  $tabPresentation:= $filter($lookup($gc.automated_capability,$bbb).scenarios,function($v){($v.id = $Scenario_id)}).title;
+                  $tabRef := "/entities/automated_capability/automated_capability_card_page_functions?id=" & $bbb & "&Scenario_id=" & $encodeUrl($Scenario_id);
+
+                  $isCurrent:= $Scenario_id = $curSC ? true : false;
+
+                  "- " & $makeBold("[" & $tabPresentation & "](" & $tabRef & ")", $isCurrent)
+
+              )});
+
+          $tabs ? $join($tabs,"\n") : " "
+
+      )
+
+  getScenarioList:
+    title: Список сценариев (первый по алфавиту)
+    params:
+      - alias: ScenarioItems
+        title: Все сценарии BBB
+        required: true
+    result:
+      type: string
+    code: >
+      (
+          $ScenarioItems:=ScenarioItems;
+
+          $ScenarioLists:= $sort($distinct($ScenarioItems.scenarios.id));
+
+          $ScenarioLists ? $ScenarioLists[0] : " ";
+      )
+  getBBBAsyncAPIData_3_0:
+    title: Получение events BBB для карточки
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: object
+    code: >
+      (
+        $bbbID :=bbbID;
+        $gc    := gc;
+        $bbb   := $lookup($gc.automated_capability, $bbbID);
+
+        $businessMessages:= $bbb.business_api 
+                        ? $map( $filter($bbb.business_api, 
+                                        function($v){ $v.api_type = "business_event"}
+                                    ),
+                                function($vv){
+                                    $lookup{
+                                        $vv.id : $lookup { 
+                                                            "name": $vv.id,
+                                                            "title": $vv.title,
+                                                            "contentType": "application/json",
+                                                            "payload": {
+                                                                "$ref": "#/components/schemas/B3Event"
+                                                            }
+                                                        }
+                                    }
+                                }
+                            )
+                        : "[]";
+
+        /*Если по какой-то причине бизнес собыьтий не описано, то подложим стандартное описание сообщеения*/
+        $standartBusinessMessage:= {
+                "bbbBusinessEvent":{
+                    "name": "bbbBusinessEvent",
+                    "title": "Business событие BBB",
+                    "summary": "Уведомление о работе BBB.",
+                    "contentType": "application/json",
+                    "payload":{
+                        "$ref":"#/components/schemas/B3Event"
+                    }
+                }
+            };
+
+        $businessMessages:= $businessMessages != "[]" ? $businessMessages : $standartBusinessMessage;
+
+        /*$log($businessMessages, "businessMessages");
+        $log($businessMessagesObj, "businessMessagesObj");*/
+
+
+        $activityMessages:= $bbb.scenarios
+                                ? $map( $bbb.scenarios,      
+                                        function($vv){
+                                            $lookup{
+                                                $vv.id & "_ActivityEvent" : $lookup { 
+                                                                    "name": $vv.id,
+                                                                    "title": $vv.title,
+                                                                    "contentType": "application/json",
+                                                                    "payload": {
+                                                                        "$ref": "#/components/schemas/B3Event"
+                                                                    }
+                                                                }
+                                            }
+                                        }
+                                    )
+                                : "[]";
+
+        /*стандартное activity событие*/
+        $StandartActivityMessage:= {
+                "bbbActivityEvent":{
+                    "name": "bbbActivityEvent",
+                    "title": "Activity событие BBB",
+                    "summary": "Уведомление о работе BBB.",
+                    "contentType": "application/json",
+                    "payload":{
+                        "$ref":"#/components/schemas/B3Event"
+                    }
+                }
+            };
+        $activityMessages:= $activityMessages != "[]" ? $activityMessages : $StandartActivityMessage;
+        /*стандартное событие мониторинга*/
+        $monitoringMessage:= {
+                "bbbMonitoringEvent":{
+                    "name": "bbbMonitoringEvent",
+                    "title": "Событие мониторинга BBB",
+                    "summary": "Мониторинг работы BBB.",
+                    "contentType": "application/json",
+                    "payload":{
+                        "$ref":"#/components/schemas/MonitoringEvent"
+                    }
+                }
+            };
+
+        /*стандартное событие журнала*/
+        $journalMessage:= {
+                "bbbJournalEvent":{
+                    "name": "bbbJournalEvent",
+                    "title": "Журналирование BBB",
+                    "summary": "Журналирование BBB.",
+                    "contentType": "application/json",
+                    "payload":{
+                        "$ref":"#/components/schemas/JournalEvent"
+                    }
+                }
+            };
+
+        /*объединяем все события в один массив*/
+        $messages :=$append($businessMessages,[$activityMessages,$monitoringMessage, $journalMessage]);
+
+        /*$log($messages, "messages2");*/
+
+        /*делаем объект из массива*/
+        $messagesObj:= $merge($messages);
+        /*$log($messagesObj, "messagesObj");*/
+
+        /*описываем события для раздела топиков*/
+        $channelBusinessMessages:= $bbb.business_api 
+                                        ? $map( $filter($bbb.business_api, 
+                                                        function($v){ $v.api_type = "business_event"}
+                                                    ),
+                                                function($vv){
+                                                    $lookup{
+                                                        $vv.id&".message" : $lookup { 
+                                                                            "$ref": "#/components/messages/"&$vv.id
+                                                                        }
+                                                    }
+                                                }
+                                            )
+                                        : "[]";
+
+        /*Если по какой-то причине бизнес собыьтий не описано, то подложим стандартное описание */
+        $standartChannelBusinessMessage := [{ "businessEvent.message": { "$ref": "#/components/messages/bbbEvent" } }];
+
+        $channelBusinessMessages:= $channelBusinessMessages != "[]" ? $channelBusinessMessages : $append ($standartChannelBusinessMessage, []);
+
+        /*$log($channelBusinessMessages, "channelBusinessMessages");*/
+
+        /*делаем объект из массива*/
+        $channelBusinessMessagesObj:= $merge($channelBusinessMessages);
+
+        /*$log($channelBusinessMessagesObj, "channelBusinessMessagesObj");*/
+
+        /*описываем события для раздела operations*/
+        $operationBusinessMessages:= $bbb.business_api 
+                                        ? $map( $filter($bbb.business_api, 
+                                                        function($v){ $v.api_type = "business_event"}
+                                                    ),
+                                                function($vv){
+                                                    $lookup{
+                                                        "$ref": "#/channels/" & $bbbID & ".BUSINESSEVENT.V2/messages/"&$vv.id&".message"
+                                                    }
+                                                }
+                                            )
+                                        : "[]";
+
+        /*Если по какой-то причине бизнес собыьтий не описано, то подложим стандартное описание */
+        $standartOperationBusinessMessage :=  {"$ref": "#/channels/" & $bbbID & ".BUSINESSEVENT.V2/messages/businessEvent.message" };
+
+        $operationBusinessMessages:= $operationBusinessMessages !="[]" ? $append ($operationBusinessMessages,[]) : $append ($standartOperationBusinessMessage, []);
+
+        /*$log($operationBusinessMessages, "operationBusinessMessages");*/
+
+        $channelActivityMessages:= $bbb.scenarios
+                                                ? $map($bbb.scenarios, 
+                                                        function($vv){
+                                                            $lookup{
+                                                                $vv.id&"_ActivityEvent" : $lookup { 
+                                                                                    "$ref": "#/components/messages/"&$vv.id & "_ActivityEvent"
+                                                                                }
+                                                            }
+                                                        }
+                                                    )
+                                                : "[]";
+
+        $standartChannelActivityMessage := [{ "activityEvent.message": { "$ref": "#/components/messages/bbbActivityEvent" } }];
+
+        $channelActivityMessages:= $channelActivityMessages != "[]" ? $channelActivityMessages : $append ($standartChannelActivityMessage, []);
+
+        $channelActivityMessagesObj:= $merge($channelActivityMessages);
+
+        $operationActivityMessages:= $bbb.scenarios
+                                                ? $map($bbb.scenarios,
+                                                        function($vv){
+                                                            $lookup{
+                                                                "$ref": "#/channels/" & $bbbID & ".ACTIVITYEVENT.V2/messages/"&$vv.id&"_ActivityEvent"
+                                                            }
+                                                        }
+                                                    )
+                                                : "[]";
+
+                /*Если по какой-то причине бизнес собыьтий не описано, то подложим стандартное описание */
+                $standartOperationActivityMessage :=  {"$ref": "#/channels/" & $bbbID & ".ACTIVITYEVENT.V2/messages/activityEvent.message" };
+
+                $operationActivityMessages:= $operationActivityMessages !="[]" ? $append ($operationActivityMessages,[]) : $append ($standartOperationActivityMessage, []);
+
+        /*формируем раздел топиков*/
+        $channels:= {
+            $bbbID &".ACTIVITYEVENT.V2":{
+                "description": "Топик для activity событий сценариев BBB",
+                "messages": $channelActivityMessagesObj
+            },
+            $bbbID &".BUSINESSEVENT.V2":{
+                "description": "Топик для business событий сценариев BBB",
+                "messages": $channelBusinessMessagesObj
+            },
+            $bbbID &".MONITORINGEVENT.V1":{
+                "description": "Топик для событий мониторинга BBB",
+                "messages": {
+                    "monitoringEvent.message": {
+                        "$ref": "#/components/messages/bbbMonitoringEvent"
+                    }
+                }
+            },
+            $bbbID &".JOURNALEVENT.V1":{
+                "description": "Топик для событий журналирования BBB",
+                "messages": {
+                    "journalEvent.message": {
+                        "$ref": "#/components/messages/bbbJournalEvent"
+                    }
+                }
+            }
+        };
+
+        /*формируем раздел operations*/
+        $operations:= {
+                "activityEvent": {
+                        "action": "send",
+                        "channel": {
+                            "$ref": "#/channels/" & $bbbID & ".ACTIVITYEVENT.V2"
+                        },
+                        "summary": "Уведомление об изменениях сценариев BBB в рамках activity",
+                        "messages": $operationActivityMessages
+                    },
+                    "businessEvent": {
+                        "action": "send",
+                        "channel": {
+                            "$ref": "#/channels/" & $bbbID & ".BUSINESSEVENT.V2"
+                        },
+                        "summary": "Уведомление об изменениях бизнес-сущности, которой владеет BBB",
+                        "messages": $operationBusinessMessages
+                    },
+                    "monitoringEvent": {
+                        "action": "send",
+                        "channel": {
+                            "$ref": "#/channels/" & $bbbID & ".MONITORINGEVENT.V1"
+                        },
+                        "summary": "Уведомление об изменениях бизнес-сущности, которой владеет BBB",
+                        "messages": [
+                                {
+                                    "$ref": "#/channels/" & $bbbID & ".MONITORINGEVENT.V1/messages/monitoringEvent.message"
+                                }
+                            ]
+                    },
+                    "journalEvent": {
+                        "action": "send",
+                        "channel": {
+                            "$ref": "#/channels/" & $bbbID & ".JOURNALEVENT.V1"
+                        },
+                        "summary": "Уведомление об изменениях бизнес-сущности, которой владеет BBB",
+                        "messages": [
+                                {
+                                    "$ref": "#/channels/" & $bbbID & ".JOURNALEVENT.V1/messages/journalEvent.message"
+                                }
+                            ]
+                    }
+                };
+
+        /*$log ($operations, "operations");
+        $log ($messagesObj, "messagesObj2");*/
+
+        /*формируем раздел components*/
+        $components:={
+            "messages": $messagesObj,
+            "schemas": ""
+          };
+
+        /*формируем раздел тэгов*/
+        $tags:= [
+            {
+                "name": "bbb." & $bbbID,
+                "description": $bbb.title,
+                "externalDocs": {
+                    "description": "Ссылка на BBB на портале DocHub",
+                    "url": "http://tksds-seaf00002.delta.sbrf.ru:8083/entities/automated_capability/automated_capability_card?id=" & $bbbID
+                },
+                "x-bbbTagType": "card"
+            }
+        ];
+
+        /*конечный результат*/
+        $result:= {
+                        "asyncapi": "3.0.0",
+                        "info": {
+                            "title": "BBB "&$bbbID&" Events",
+                            "version": "1.0.0",
+                            "description": "Описание схем событий BBB "&$bbbID&".",
+                            "tags": $tags
+                        },
+                        "defaultContentType": "application/json", 
+                        "channels": $channels,
+                        "operations": $operations,
+                        "components": $components
+                    }
+      )
+
+  getBBBOpenAPIData:
+    title: Получение OpenAPI BBB для карточки
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: object
+    code: >
+      (
+        $bbbID :=bbbID;
+        $gc    := gc;
+        $bbb   := $lookup($gc.automated_capability, $bbbID);
+
+        $tags_api := $bbb.business_api ? $map($bbb.business_api, 
+                                            function($vv) {
+                                                $vv.api_type = "getter" or $vv.api_type = "setter" ? {
+                                                    "name" : $uppercase("bbb." & $bbbID & "." & $vv.id),
+                                                    "x-bbbTagType" : "interface"
+                                                }
+                                            }
+                                        );
+
+        $tag_bbb:= [
+                    {
+                        "name": $uppercase("bbb." & $bbbID),
+                        "description": $bbb.title,
+                        "externalDocs": {
+                            "description": "Ссылка на BBB на портале DocHub",
+                            "url": "http://tksds-seaf00002.delta.sbrf.ru:8083/entities/automated_capability/automated_capability_card?id=" & $bbbID
+                        },
+                        "x-bbbTagType": "card"
+                    }
+                ];
+
+        $tags:= $append($tag_bbb, $tags_api);
+
+        $result:= {
+                        "openapi": "3.0.1",
+                        "info":{
+                            "title": "Интерфейсы BBB " & $bbb.title,
+                            "version": "1.0.0"
+                        },
+                        "paths" :{ },
+                        "tags": $tags
+                    }
+      )
+
+  get_bbb_topics_meta:
+    title: Получение описание ТК и ТчВ топиков BBB
+    params:
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    result:
+      type: object
+    code: >
+      (
+        $bbb_id :=bbbID;
+
+        $get_tk := function($bbb_id, $topic_name){
+          {
+            "kind": "TechnologicalComponent",
+            "loadAction": "insert",
+            "yamlId": $bbb_id & "." & $topic_name,
+            "parentYamlId": "ecddd1e7-188f-48cd-ba7d-fd121056d148",
+            "name": $bbb_id & "." & $topic_name,
+            "receivedDataConfLevel": "K_3",
+            "receivedDataIntegrityLevel": "I_3",
+            "networkZone": "eAZ",
+            "validSpecies": [
+              "kafka"
+            ],
+            "technologyTypeCode": "INTEGRATION_COMPONENTS_TOPIC",
+            "networkSegment": "SIGMA",
+            "status": "DEVELOP",
+            "shared": false,
+            "isContainer": false,
+            "functionality": "Топик",
+            "network": "SBERBANK_NETWORK",
+            "technologyGroupCode": "INTEGRATION_COMPONENTS",
+            "languages": [
+              {
+                "code": "JAVA",
+                "label": "Java"
+              }
+            ],
+            "technologyYamlId": "5e677b8f-36c8-4459-a999-af845d3167b4",
+            "parentType": "FS",
+            "destinationCode": "SERVICE",
+            "appTierCode": "SERVICE",
+            "technologyCode": 1083,
+            "versions": [
+              {
+                "yamlId": "VersionOf" & $bbb_id & "." & $topic_name,
+                "comment": "Измененная версия: 1.0.0",
+                "parentYamlId": $bbb_id & "." & $topic_name,
+                "versionNumber": "1.0.0"
+              }
+            ]
+          }
+        };
+
+        $get_ip := function($bbb_id, $topic_name){
+          {
+            "kind": "IntegrationPoint",
+            "loadAction": "insert",
+            "yamlId": $bbb_id & "." & $topic_name & "_ip",
+            "componentYamlId": $bbb_id & "." & $topic_name,
+            "name": $bbb_id & "." & $topic_name,
+            "template": "NOTIFICATION", 
+            "appProtocol": "KAFKA",
+            "dateLastChange": "2023-08-30T12:13:32.84",
+            "connectionType": "OTHER",
+            "network": "SBERBANK_NETWORK",
+            "networkId": 119,
+            "networkSegment": "SIGMA",
+            "networkZone": "eAZ",
+            "sentData": {
+                "format": "JSON",
+                "encoding": "UTF-8",
+                "signature": "NOPE",
+                "description": "События в соответсвии с протоколом BBB",
+                "sensitiveData": [
+                    "NO_DATA"
+                ],
+                "dataEncryption": "нет",
+                "integrityLevel": "I_3",
+                "confidentialLevel": "K_3"
+            },
+            "receivedData": {
+                "format": "JSON",
+                "encoding": "UTF-8",
+                "signature": "NOPE",
+                "description": "События в соответсвии с протоколом BBB",
+                "sensitiveData": [
+                    "NO_DATA"
+                ],
+                "dataEncryption": "нет",
+                "integrityLevel": "I_3",
+                "confidentialLevel": "K_3"
+            },
+            "endpoints": [
+                {
+                    "url": $bbb_id & "." & $topic_name,
+                    "yamlId": "EndpointOf" & $bbb_id & "." & $topic_name & "_ip",
+                    "name": $bbb_id & "." & $topic_name,
+                    "ports": "9093",
+                    "deleted": false,
+                    "pointId": 125535,
+                    "netProtocol": "TCP",
+                    "parentYamlId": $bbb_id & "." & $topic_name & "_ip",
+                    "authorizationType": "OTHER",
+                    "otherAuthorization": "ACL",
+                    "clientAuthentication": {
+                        "yamlId": "caEndpointOf" & $bbb_id & "." & $topic_name & "_ip",
+                        "tlsVersion": "TLS_1_2",
+                        "certificateType": "BANK",
+                        "clientAuthenticationTypes": [
+                            "MTLS"
+                        ]
+                    },
+                    "serverAuthentication": {
+                        "yamlId": "saEndpointOf" & $bbb_id & "." & $topic_name & "_ip",
+                        "tlsVersion": "TLS_1_2",
+                        "certificateType": "BANK",
+                        "serverAuthenticationTypes": [
+                            "MTLS"
+                        ]
+                    }
+                }
+            ],
+            "otherType": "Топик",
+            "isLocal": false,
+            "versions": [
+                {
+                    "period": "SECOND",
+                    "status": "PLANNED",
+                    "latency": 5000,
+                    "yamlId": "VersionOf" & $bbb_id & "." & $topic_name & "_ip",
+                    "parentYamlId": $bbb_id & "." & $topic_name & "_ip",
+                    "versionNumber": "1.0.0",
+                    "maxSizeOfReceivedMessage": 200,
+                    "maxSizeOfTransmittedMessage": 200
+                }
+            ],
+            "isCustom": false,
+            "isOut": false,
+            "customerDrivenContracts": false,
+            "parentYamlId": "ecddd1e7-188f-48cd-ba7d-fd121056d148"
+          }
+        };
+
+        $get_system := function(){
+          {
+            "kind": "System",
+            "yamlId": "6b69f8d1-31db-11ee-3945-005056830724",
+            "name": "SEAF.Era",
+            "serviceManagerId": "CI05040718"
+          }      
+        };
+
+        $get_subsystem := function(){
+          {
+            "kind": "SubSystem",
+            "yamlId": "ecddd1e7-188f-48cd-ba7d-fd121056d148",
+            "name": "SEAF.Era.DocHubBBB",
+            "serviceManagerId": "CI07702774"
+          }
+        };     
+
+        {
+          "digitalArchitecture": [
+            $get_system(),
+            $get_subsystem(),
+            $get_tk($bbb_id, "ACTIVITYEVENT.V2"),
+            $get_tk($bbb_id, "BUSINESSEVENT.V2"),
+            $get_tk($bbb_id, "JOURNALEVENT.V1"),
+            $get_tk($bbb_id, "MONITORINGEVENT.V1")
+          ]
+        }
+      )
+
+
+  Parent_Scenarios:
+    title: Определяет родительские сценарии для текущего
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id BBB
+      - alias: scenarioID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id сценария
+    result:
+      type: array
+    code: >
+      (
+        $gc := gc;
+        $bbbID:= bbbID;
+        $scenario_id := scenarioID;
+        $bbs := $gc.automated_capability;
+                            $result := $bbs.$spread().( 
+                                                    $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                                                    $status = "Планирование" ? [] :        
+                                                    *.scenarios.(
+                                                        $map(trigger_groups.trigger_items.event, function($v, $i) {
+                                                            $map($v, function($src, $j) {
+                                                                {
+                                                                    "sc_id": id,
+                                                                    "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                                                                    "source": $v.source,
+                                                                    "source_scenario": $v.source_scenario,
+                                                                    "source_activity_type": $v.source_activity_type,
+                                                                    "source_scenario_state": $v.source_scenario_state
+                                                                }
+                                                            })
+                                                        })
+                                                    )
+                                                );
+                                                $result:=$clone($result);
+                                                $badArrays := $filter($result, function($item){$type($item) = "array"});
+                                                $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                                                $objArrays := $filter($result, function($item){$type($item) = "object"});
+                                                $bb1:=$append($fixedArray, $objArrays);
+                                                $bb1:=$clone($bb1);
+
+
+                                                $bbs := $gc.automated_capability;
+                                                $result := $bbs.$spread().( 
+                                                    $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                                                    $status = "Планирование" ? [] :        
+                                                    $.($map($, function($v, $i) {
+                                                                {
+                                                                    "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                                                                    "title": $lookup($gc.automated_capability, $AUTOMATED_CAPABILITY_ID).title
+                                                        }}
+                                                            )
+                                                        )
+                                                    );
+                                                    $result:=$clone($result);
+
+                                                $prettifier:= function($array) { $join($map($array, function($v, $i){$i = 0? "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $v.source &" {" & $lookup($gc.automated_capability,$v.source).title & "} "& $v.source & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $v.source & "&Scenario_id="& $v.source_scenario &" {" & $lookup($gc.automated_capability,$v.source).scenarios[id=$v.source_scenario].title & "} "& $v.source_scenario &"]]" &"\n ;" :"****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $v.source &" {" & $lookup($gc.automated_capability,$v.source).title & "} "& $v.source & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $v.source & "&Scenario_id="& $v.source_scenario &" {" & $lookup($gc.automated_capability,$v.source).scenarios[id=$v.source_scenario].title & "} "& $v.source_scenario &"]]" &"\n ;"}), "\n")};
+
+                            $one:=$map($bb1, function($item){$merge([$item,{"bbb_descr_from_source":$filter($result, function($entry){$entry.id_bbb=$item.id_bbb})[0].title}])});
+                            $two := $filter($one, function($a) {$a.sc_id = $string($scenario_id) and $a.source_scenario_state = "INITIATED" and $a.source_activity_type.$contains("ACTIVITY_INIT") and $lookup($gc.automated_capability,$a.source).scenarios[id=$a.source_scenario].status != "Выведен"});
+                            $three:=$exists($two) = true ? $prettifier($two) : "";
+                  /*$two.{"bbb_descr_from_source": bbb_descr_from_source, "source_scenario":source_scenario};*/  
+                            $final_result:= $three ? $distinct([$three]) : [];
+
+
+      )
+  Child_Scenarios:
+    title: Определяет дочерние  сценарии для текущего
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id BBB
+      - alias: scenarioID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id сценария
+    result:
+      type: array
+    code: >
+      (
+        $gc := gc;
+        $bbbID:= bbbID;
+        $scenario_id := scenarioID;
+        $bbs := $gc.automated_capability;
+                            $result := $bbs.$spread().( 
+                                      $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                                      $status = "Планирование" ? [] :        
+                                      *.scenarios.(
+                                          $map(trigger_groups.trigger_items.event, function($v, $i) {
+                                              $map($v, function($src, $j) {
+                                                  {
+                                                      "sc_id": id,
+                                                      "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                                                      "source": $v.source,
+                                                      "source_scenario": $v.source_scenario,
+                                                      "source_activity_type": $v.source_activity_type,
+                                                      "source_scenario_state": $v.source_scenario_state
+                                                  }
+                                              })
+                                          })
+                                      )
+                                  );
+                                  $result:=$clone($result);
+                                  $badArrays := $filter($result, function($item){$type($item) = "array"});
+                                  $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                                  $objArrays := $filter($result, function($item){$type($item) = "object"});
+                                  $bb1:=$append($fixedArray, $objArrays);
+                                  $bb1:=$clone($bb1);
+
+
+                                  $bbs := $gc.automated_capability;
+                                  $result := $bbs.$spread().( 
+                                      $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                                      $status = "Планирование" ? [] :        
+                                      $.($map($, function($v, $i) {
+                                                  {
+                                                      "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                                                      "title": $lookup($gc.automated_capability, $AUTOMATED_CAPABILITY_ID).title
+                                          }}
+                                              )
+                                          )
+                                      );
+                                      $result:=$clone($result);
+
+                                  $prettifier:= function($array) { $join($map($array, function($v, $i){$i = 0? "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $v.id_bbb &" {" & $lookup($gc.automated_capability,$v.id_bbb).title & "} "& $v.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $v.id_bbb & "&Scenario_id="& $v.sc_id &" {" & $lookup($gc.automated_capability,$v.id_bbb).scenarios[id=$v.sc_id].title & "} "& $v.sc_id &"]]" &"\n ;" : "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $v.id_bbb &" {" & $lookup($gc.automated_capability,$v.id_bbb).title & "} "& $v.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $v.id_bbb & "&Scenario_id="& $v.sc_id &" {" & $lookup($gc.automated_capability,$v.id_bbb).scenarios[id=$v.sc_id].title & "} "& $v.sc_id &"]]" &"\n ;" }), "\n")};
+
+                                  $one:=$map($bb1, function($item){$merge([$item,{"bbb_descr_from_source":$filter($result, function($entry){$entry.id_bbb=$item.id_bbb})[0].title}])});
+                                $offspring:=$clone($one);
+                                $offspring1:=$filter($offspring, function($a){$a.source = $bbbID and $a.source_scenario = $scenario_id and $a.source_scenario_state = "INITIATED" and $a.source_activity_type.$contains("ACTIVITY_INIT") and $lookup($gc.automated_capability,$a.id_bbb).scenarios[id=$a.sc_id].status != "Выведен"});
+                          $offspring2:=$exists($offspring1) = true ? $prettifier($offspring1) : "";  
+                          $final_result:= $offspring2 ? $distinct([$offspring2]) : [];
+      )
+  Following_scenarios:
+    title: Определяет последующие сценарии для текущего
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id BBB
+      - alias: scenarioID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id сценария
+    result:
+      type: array
+    code: >
+      (  
+         $gc := gc;
+         $bbbID:= bbbID;
+         $scenario_id := scenarioID;
+         $bbs := $gc.automated_capability;
+
+         $result_events := $bbs.$spread().(
+          $AUTOMATED_CAPABILITY_ID := $keys()[0];
+          $status = "Планирование" ? [] :
+              *.scenarios.(
+              $map($filter(trigger_groups.trigger_items.event,function($v) { $v.source_scenario }), function($v, $i) {
+                  $map($v, function($src, $j) {
+                     {
+                     "sc_id": id,
+                     "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                     "source": $v.source,
+                     "source_scenario": $v.source_scenario,
+                     "source_activity_type": $v.source_activity_type,
+                     "source_scenario_state": $v.source_scenario_state
+                     }
+                      })})
+                      ));
+         $result_business_events := $bbs.$spread().(
+          $AUTOMATED_CAPABILITY_ID := $keys()[0];
+          $status = "Планирование" ? [] :
+              *.scenarios.(
+              $map($filter(trigger_groups.trigger_items.event,function($v) { $v.source_business_api }), function($v, $i) {
+                  $map($v, function($src, $j) {
+                   {
+                   "sc_id": id,
+                   "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                   "source": $v.source,
+                   "source_business_api": $v.source_business_api
+                   }
+                    })})
+                    ));
+         $result_setter_api := $bbs.$spread().(
+            $AUTOMATED_CAPABILITY_ID := $keys()[0];
+            $status = "Планирование" ? [] :
+                *.scenarios.(
+                $map($filter(integrations_used,function($v) { $v.source_business_api }), function($v, $i) {
+                      $map($v, function($src, $j) {
+                       {
+                       "sc_id": id,
+                       "sc_title": title,
+                       "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                       "source": $v.source,
+                       "source_business_api": $v.source_business_api
+                       }
+                        })})
+                        ));    
+               $result_events:=$clone($result_events);
+               $badArrays := $filter($result_events, function($item){$type($item) = "array"});
+               $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+               $objArrays := $filter($result_events, function($item){$type($item) = "object"});
+               $bb1:=$append($fixedArray, $objArrays);
+               $bb1:=$clone($bb1);
+
+               $result_business_events:=$clone($result_business_events);
+               $badArrays := $filter($result_business_events, function($item){$type($item) = "array"});
+               $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+               $objArrays := $filter($result_business_events, function($item){$type($item) = "object"});
+               $bb2:=$append($fixedArray, $objArrays);
+               $bb2:=$clone($bb2);
+
+               $result_setter_api:=$clone($result_setter_api);
+               $badArrays := $filter($result_setter_api, function($item){$type($item) = "array"});
+               $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+               $objArrays := $filter($result_setter_api, function($item){$type($item) = "object"});
+               $bb3:=$append($fixedArray, $objArrays);
+               $bb3:=$clone($bb3);
+
+               $bb1_filtered := $filter($bb1, function($item) {
+                       ($item.source_scenario = $scenario_id and $item.source_scenario_state != "INITIATED" and $item.id_bbb != $bbbID and $lookup($gc.automated_capability,$item.source).scenarios[id=$item.source_scenario].status != "Выведен")
+                   });
+
+               $bb2_filtered := $filter($bb2, function($item) {(
+                   $business_events_produced := $bbs.*.scenarios[id = $scenario_id].business_events_produced;
+                   $item.source_business_api in $business_events_produced and $item.id_bbb != $bbbID and $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].status != "Выведен"
+               )});
+
+               $bb3_filtered := $filter($bb3, function($item) {(
+                    $current_scenario:= $item.source;
+                    $business_api := $lookup($bbs,$current_scenario).business_api;      
+                    $item.sc_id = $scenario_id and  $item.id_bbb = $bbbID and $item.source != $bbbID and $business_api[id=$item.source_business_api].api_type = "setter" and $item.source_business_api in $lookup($gc.automated_capability,$item.source).scenarios.trigger_groups.trigger_items.api
+                )});
+
+              $plantuml_bb1 := $map($bb1_filtered,function($item){
+                      "***_" &" "& $item.source_activity_type & "." & $item.source_scenario_state &"\n"&  "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.id_bbb &" {" & $lookup($gc.automated_capability,$item.id_bbb).title & "} "& $item.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.id_bbb & "&Scenario_id="& $item.sc_id &" {" & $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].title & "} "& $item.sc_id &"]]" &"\n ;"
+                  });  
+               $plantuml_bb2:= $map($bb2_filtered,function($item){(
+                        $business_apis:= $lookup($gc.automated_capability,$item.source).business_api;
+                         $api_type:= $filter($business_apis,function($v,$i){$v.id=$item.source_business_api}).api_type;
+                        "***_" &" "& $api_type & "." & $item.source_business_api &"\n"&  "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.id_bbb &" {" & $lookup($gc.automated_capability,$item.id_bbb).title & "} "& $item.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.id_bbb & "&Scenario_id="& $item.sc_id &" {" & $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].title & "} "& $item.sc_id &"]]" &"\n ;"
+                    )});
+               $plantuml_bb3:= $map($bb3_filtered,function($item){(
+                 $external_scen := $map($lookup($bbs, $item.source).scenarios, function($v) {
+                        {
+                            "id_scen": $v.id,
+                            "api": $v.triggerGroups.triggerItems.api
+                        }
+                    });
+                    $external_scen:= $filter($external_scen,function($v,$i){$gc.automated_capability.*.scenarios[id=$v.id_scen].status != "Выведен"});
+                    $scen_ids := $external_scen[$item.source_business_api in api].id_scen;
+                    $source_business_api := $item.source_business_api;
+                    $id_bbb:= $item.source;
+
+                    $map($scen_ids, function($scen_id) {      
+                           "***_" &" "& "setter" & "." & $source_business_api &"\n"&  "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $id_bbb &" {" & $lookup($gc.automated_capability,$id_bbb).title & "} "& $id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $id_bbb & "&Scenario_id="& $scen_id &" {" & $lookup($gc.automated_capability,$id_bbb).scenarios[id=$scen_id].title & "} "& $scen_id &"]]" &"\n ;"
+                           });
+                                   )});
+              $full_code:= $append($append($plantuml_bb1,$plantuml_bb2),$plantuml_bb3);
+              $final_result:= $full_code ? $distinct([$full_code]) : [];
+      )
+  Previous_scenarios:
+    title: Определяет предшествующие сценарии для текущего
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id BBB
+      - alias: scenarioID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id сценария
+    result:
+      type: array
+    code: >
+      ( 
+         $gc := gc;
+                  $bbbID:= bbbID;
+                  $scenario_id := scenarioID;
+                  $bbs := $gc.automated_capability;
+
+                  $result_events := $bbs.$spread().(
+                   $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                   $status = "Планирование" ? [] :
+                       *.scenarios.(
+                       $map($filter(trigger_groups.trigger_items.event,function($v) { $v.source_scenario }), function($v, $i) {
+                           $map($v, function($src, $j) {
+                              {
+                              "sc_id": id,
+                              "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                              "source": $v.source,
+                              "source_scenario": $v.source_scenario,
+                              "source_activity_type": $v.source_activity_type,
+                              "source_scenario_state": $v.source_scenario_state
+                              }
+                               })})
+                               ));
+                  $result_business_events := $bbs.$spread().(
+                   $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                   $status = "Планирование" ? [] :
+                       *.scenarios.(
+                       $map($filter(trigger_groups.trigger_items.event,function($v) { $v.source_business_api }), function($v, $i) {
+                           $map($v, function($src, $j) {
+                            {
+                            "sc_id": id,
+                            "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                            "source": $v.source,
+                            "source_business_api": $v.source_business_api
+                            }
+                             })})
+                             ));
+                  $result_int := $bbs.$spread().(
+                                    $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                                    $status = "Планирование" ? [] :
+                                        *.scenarios.(
+                                        $map($filter(integrations_used,function($v) { $v.source_business_api }), function($v, $i) {
+                                            $map($v, function($src, $j) {
+                                             {
+                                             "sc_id": id,
+                                             "sc_title": title,
+                                             "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                                             "source": $v.source,
+                                             "source_business_api": $v.source_business_api
+                                             }
+                                              })})
+                                              ));    
+                        $result_events:=$clone($result_events);
+                        $badArrays := $filter($result_events, function($item){$type($item) = "array"});
+                        $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                        $objArrays := $filter($result_events, function($item){$type($item) = "object"});
+                        $bb1:=$append($fixedArray, $objArrays);
+                        $bb1:=$clone($bb1);
+
+                        $result_business_events:=$clone($result_business_events);
+                        $badArrays := $filter($result_business_events, function($item){$type($item) = "array"});
+                        $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                        $objArrays := $filter($result_business_events, function($item){$type($item) = "object"});
+                        $bb2:=$append($fixedArray, $objArrays);
+                        $bb2:=$clone($bb2);
+
+                        $result_int:=$clone($result_int);
+                        $badArrays := $filter($result_int, function($item){$type($item) = "array"});
+                        $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                        $objArrays := $filter($result_int, function($item){$type($item) = "object"});
+                        $bb3:=$append($fixedArray, $objArrays);
+                        $bb3:=$clone($bb3);
+
+                        $bb1_filtered := $filter($bb1, function($item) {
+                                ($item.source_scenario_state != "INITIATED" and $item.source != $bbbID and $item.id_bbb = $bbbID and $lookup($gc.automated_capability,$item.source).scenarios[id=$item.source_scenario].status != "Выведен")
+                            });
+
+                        $bb2_filtered := $filter($bb2, function($item) {(
+                            $external_scen := $map($lookup($bbs,$item.source).scenarios,function($v){({"id_scen":$v.id,"bus_events":$v.business_events_produced})});
+                            $item.source_business_api in $external_scen.bus_events and $item.id_bbb = $bbbID and $item.sc_id = $scenario_id
+                        )});
+
+                        $bb3_filtered := $filter($bb3, function($item) {(  
+                             $business_apis:= $lookup($gc.automated_capability,$item.source).business_api;
+                             $trigger_api_our_scenario:= $lookup($gc.automated_capability,$item.source).scenarios[id=$scenario_id].trigger_groups.trigger_items.api;
+                             $item.id_bbb != $bbbID and $item.source = $bbbID and $item.source_business_api in $business_apis.id and $business_apis[id=$item.source_business_api].api_type = "setter"  and $item.source_business_api in  $trigger_api_our_scenario and $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].status != "Выведен"
+                         )});
+
+                       $plantuml_bb1 := $map($bb1_filtered,function($item){
+                               "***_" &" "& $item.source_activity_type & "." & $item.source_scenario_state &"\n"&  "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.source &" {" & $lookup($gc.automated_capability,$item.source).title & "} "& $item.source & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.source & "&Scenario_id="& $item.source_scenario &" {" & $lookup($gc.automated_capability,$item.source).scenarios[id=$item.source_scenario].title & "} "& $item.source_scenario &"]]" &"\n ;"
+                           });  
+                        $plantuml_bb2 := $map($bb2_filtered, function($item) {(
+                            $business_apis := $lookup($gc.automated_capability, $item.source).business_api;
+                            $external_scen := $map($lookup($bbs, $item.source).scenarios, function($v) {
+                                {
+                                    "id_scen": $v.id,
+                                    "bus_events": $v.business_events_produced
+                                }
+                            });
+                            $external_scen:= $filter($external_scen,function($v,$i){$gc.automated_capability.*.scenarios[id=$v.id_scen].status != "Выведен"});
+                            $scen_ids := $external_scen[$item.source_business_api in bus_events].id_scen;
+                            $api_type := $filter($business_apis, function($v, $i) { $v.id = $item.source_business_api }).api_type;
+                            $id_bbb:= $item.source;
+                            $source_business_api:= $item.source_business_api;
+
+                            $map($scen_ids, function($scen_id) {
+                                "***_ " & $api_type & "." & $source_business_api &"\n"& "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $id_bbb &" {" & $lookup($gc.automated_capability,$id_bbb).title & "} "& $id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $id_bbb & "&Scenario_id="& $scen_id &" {" & $lookup($gc.automated_capability,$id_bbb).scenarios[id=$scen_id].title & "} "& $scen_id &"]]" &"\n ;"
+                                })
+                                )}); 
+                        $plantuml_bb3:= $map($bb3_filtered,function($item){(
+                                                "***_" &" "& "setter" & "." & $item.source_business_api &"\n"&  "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.id_bbb &" {" & $lookup($gc.automated_capability,$item.id_bbb).title & "} "& $item.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.id_bbb & "&Scenario_id="& $item.sc_id &" {" & $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].title & "} "& $item.sc_id &"]]" &"\n ;"
+                                            )});
+                       $full_code:= $append($append($plantuml_bb1,$plantuml_bb2),$plantuml_bb3).$spread();
+                       $final_result:= $full_code ? $distinct([$full_code]) : [];
+      )
+  Integrations_with_current_scenario:
+    title: Определяет интеграции с текущим сценарием
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id BBB
+      - alias: scenarioID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id сценария
+    result:
+      type: array
+    code: >
+      (
+        $gc := gc;
+        $bbbID:= bbbID;
+        $scenario_id := scenarioID;
+        $bbs := $gc.automated_capability;     
+                 $result_business_events := $bbs.$spread().(
+                  $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                  $status = "Планирование" ? [] :
+                      *.scenarios.(
+                      $map($filter(integrations_used,function($v) { $v.source_business_api }), function($v, $i) {
+                          $map($v, function($src, $j) {
+                           {
+                           "sc_id": id,
+                           "sc_title": title,
+                           "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                           "source": $v.source,
+                           "source_business_api": $v.source_business_api
+                           }
+                            })})
+                            ));  
+                 $result_activity_events := $bbs.$spread().(
+                       $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                       $status = "Планирование" ? [] :
+                           *.scenarios.(
+                           $map($filter(integrations_used,function($v) { $v.source_scenario }), function($v, $i) {
+                               $map($v, function($src, $j) {
+                                {
+                                "sc_id": id,
+                                "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                                "source": $v.source,
+                                "source_scenario": $v.source_scenario,
+                                "source_activity_type": $v.source_activity_type,
+                                "source_scenario_state": $v.source_scenario_state
+                                }
+                                 })})
+                                 ));      
+
+                 $result_business_events:=$clone($result_business_events);
+                 $badArrays := $filter($result_business_events, function($item){$type($item) = "array"});
+                 $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                 $objArrays := $filter($result_business_events, function($item){$type($item) = "object"});
+                 $bb1:=$append($fixedArray, $objArrays);
+                 $bb1:=$clone($bb1);
+
+                 $result_activity_events:=$clone($result_activity_events);
+                 $badArrays := $filter($result_activity_events, function($item){$type($item) = "array"});
+                 $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                 $objArrays := $filter($result_activity_events, function($item){$type($item) = "object"});
+                 $bb2:=$append($fixedArray, $objArrays);
+                 $bb2:=$clone($bb2);
+
+
+                 $bb1_filtered := $filter($bb1, function($item) {(
+                  $current_scenario_bus_events_produced:= $filter($lookup($gc.automated_capability,$item.source).scenarios,function($v,$i){$v.id = $scenario_id}).business_events_produced;
+                       ($item.source_business_api in $current_scenario_bus_events_produced) and $item.id_bbb != $bbbID and $item.source = $bbbID and $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].status != "Выведен" and $not($item.source_business_api in $lookup($gc.automated_capability,$item.id_bbb).scenarios.trigger_groups.trigger_items.*.source_business_api)
+                   )});
+
+                  $bb2_filtered := $filter($bb1, function($item) {(
+                        $current_scenario_bus_events_produced:= $filter($lookup($gc.automated_capability,$item.source).scenarios,function($v,$i){$v.id = $scenario_id}).business_events_produced;
+                             ($item.source_scenario = $scenario_id) and $item.id_bbb != $bbbID and $item.source = $bbbID and $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].status != "Выведен" and $not($item.source_scenario in $lookup($gc.automated_capability,$item.id_bbb).scenarios.trigger_groups.trigger_items.*.source_scenario)
+                         )});
+
+
+                $plantuml_bb1:= $map($bb1_filtered,function($item){(
+                                           $business_apis:= $lookup($gc.automated_capability,$item.source).business_api;
+                                           $api_type:= $filter($business_apis,function($v,$i){$v.id=$item.source_business_api}).api_type;
+                                           "***_" &" "& $api_type & "." & $item.source_business_api & "\n" & "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.id_bbb &" {" & $lookup($gc.automated_capability,$item.id_bbb).title & "} "& $item.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.id_bbb & "&Scenario_id="& $item.sc_id &" {" & $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].title & "} "& $item.sc_id &"]]" &"\n ;"
+                                       )});
+
+                $plantuml_bb2:= $map($bb2_filtered,function($item){(
+
+                       "***_" &" "& $item.source_activity_type & "." & $item.source_scenario_state & "\n" & "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.id_bbb &" {" & $lookup($gc.automated_capability,$item.id_bbb).title & "} "& $item.id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.id_bbb & "&Scenario_id="& $item.sc_id &" {" & $lookup($gc.automated_capability,$item.id_bbb).scenarios[id=$item.sc_id].title & "} "& $item.sc_id &"]]" &"\n ;"
+                   )});
+
+
+                $full_code:= $append($plantuml_bb1,$plantuml_bb2);
+                $final_result:= $full_code ? $distinct([$full_code]) : [];
+
+      )
+  Integrations_with_external_scenarios_or_BBB:
+    title: Интеграции с внешними сценариями/BBB
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+      - alias: bbbID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id BBB
+      - alias: scenarioID    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор сценария
+        title: Id сценария
+    result:
+      type: array
+    code: >
+      (
+        $gc := gc;
+        $bbbID:= bbbID;
+        $scenario_id := scenarioID;
+        $bbs := $gc.automated_capability;
+        $result_events := $bbs.$spread().(
+                  $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                  $status = "Планирование" ? [] :
+                      *.scenarios.(
+                      $map($filter(integrations_used,function($v) { $v.source_scenario }), function($v, $i) {
+                          $map($v, function($src, $j) {
+                             {
+                             "sc_id": id,
+                             "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                             "source": $v.source,
+                             "source_scenario": $v.source_scenario,
+                             "source_activity_type": $v.source_activity_type,
+                             "source_scenario_state": $v.source_scenario_state
+                             }
+                              })})
+                              ));
+                 $result_business_events := $bbs.$spread().(
+                  $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                  $status = "Планирование" ? [] :
+                      *.scenarios.(
+                      $map($filter(integrations_used,function($v) { $v.source_business_api }), function($v, $i) {
+                          $map($v, function($src, $j) {
+                           {
+                           "sc_id": id,
+                           "id_bbb": $AUTOMATED_CAPABILITY_ID,
+                           "source": $v.source,
+                           "source_business_api": $v.source_business_api
+                           }
+                            })})
+                            ));   
+                 $result_events:=$clone($result_events);
+                 $badArrays := $filter($result_events, function($item){$type($item) = "array"});
+                 $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                 $objArrays := $filter($result_events, function($item){$type($item) = "object"});
+                 $bb1:=$append($fixedArray, $objArrays);
+                 $bb1:=$clone($bb1);
+
+                 $result_business_events:=$clone($result_business_events);
+                 $badArrays := $filter($result_business_events, function($item){$type($item) = "array"});
+                 $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+                 $objArrays := $filter($result_business_events, function($item){$type($item) = "object"});
+                 $bb2:=$append($fixedArray, $objArrays);
+                 $bb2:=$clone($bb2);
+
+
+                 $bb1_filtered:= $filter($bb1, function($item){(
+                                 ($item.source != $bbbID and $item.id_bbb = $bbbID and $lookup($gc.automated_capability,$item.source).scenarios[id=$item.source_scenario].status != "Выведен")
+                                 )});
+
+                 $bb2_filtered := $filter($bb2, function($item) {(
+                                     ($item.source_business_api in $lookup($gc.automated_capability,$item.source).scenarios.business_events_produced and $item.sc_id = $scenario_id and $item.id_bbb = $bbbID and $item.source != $bbbID and $not($item.source_business_api in $append($lookup($gc.automated_capability,$item.id_bbb).scenarios.trigger_groups.trigger_items.*.source_business_api,$lookup($gc.automated_capability,$item.source).scenarios.trigger_groups.trigger_items.api)))
+                                 )}); 
+                 $bb3_filtered := $filter($bb2, function($item) {(
+                                    ($not($item.source_business_api in $lookup($gc.automated_capability,$item.source).scenarios.business_events_produced) and $item.sc_id = $scenario_id and $item.id_bbb = $bbbID and $item.source != $bbbID and $not($item.source_business_api in $append($lookup($gc.automated_capability,$item.id_bbb).scenarios.trigger_groups.trigger_items.*.source_business_api,$lookup($gc.automated_capability,$item.source).scenarios.trigger_groups.trigger_items.api)))
+                                                  )}); 
+
+                  $plantuml_bb1:= $map($bb1_filtered, function($item){(
+                                     "***_" &" "& $item.source_activity_type &"."&$item.source_scenario_state &"\n"&  "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $item.source &" {" & $lookup($gc.automated_capability,$item.source).title & "} "& $item.source & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $item.source & "&Scenario_id="& $item.source_scenario &" {" & $lookup($gc.automated_capability,$item.source).scenarios[id=$item.source_scenario].title & "} "& $item.source_scenario &"]]" &"\n ;"
+                                    )});         
+
+                  $plantuml_bb2:= $map($bb2_filtered,function($item){(
+                           $business_apis:= $lookup($gc.automated_capability,$item.source).business_api;
+                           $api_type:= $filter($business_apis,function($v,$i){$v.id=$item.source_business_api}).api_type;
+                           $external_scen := $map($lookup($bbs, $item.source).scenarios, function($v) {
+                                         {
+                                             "id_scen": $v.id,
+                                             "bus_events": $v.business_events_produced
+                                         }
+                                     });
+                           $external_scen:= $filter($external_scen,function($v,$i){$gc.automated_capability.*.scenarios[id=$v.id_scen].status != "Выведен"});
+                           $scen_ids := $external_scen[$item.source_business_api in bus_events].id_scen;
+                           $id_bbb:= $item.source;
+                           $source_business_api:= $item.source_business_api;
+
+                           $map($scen_ids, function($scen_id) {
+                               "***_ " & $api_type & "." & $source_business_api &"\n"& "****: BBB" &" "&  "[[/entities/automated_capability/automated_capability_card?id=" & $id_bbb &" {" & $lookup($gc.automated_capability,$id_bbb).title & "} "& $id_bbb & "]]" & "\n" & "====\n" & "Сценарий "& "[[/entities/automated_capability/automated_capability_card_page_functions?id="& $id_bbb & "&Scenario_id="& $scen_id &" {" & $lookup($gc.automated_capability,$id_bbb).scenarios[id=$scen_id].title & "} "& $scen_id &"]]" &"\n ;"
+                               })
+                             )}); 
+                  $plantuml_bb3:= $map($bb3_filtered,function($item){(
+                     $business_apis:= $lookup($gc.automated_capability,$item.source).business_api;
+                     $api_type:= $filter($business_apis,function($v,$i){$v.id=$item.source_business_api}).api_type;
+
+                      "***_" &" "& $api_type & "." & $item.source_business_api &"\n"& "****" &" "& "BBB " & "[[" & "/entities/automated_capability/automated_capability_card?id=" & $item.source &" {"& $lookup($gc.automated_capability,$item.source).title & "} "& $item.source & "]]"
+                                       )});
+                               $full_code:= $append($append($plantuml_bb1,$plantuml_bb2),$plantuml_bb3);
+                               $final_result:= $full_code ? $distinct([$full_code]) : [];
+      )

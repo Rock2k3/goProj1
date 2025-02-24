@@ -1,0 +1,7 @@
+# Подключаем определяемые сущности метамодели
+imports:
+  - automated_capability/root.yaml
+  - automated_system/root.yaml
+  - business_function/root.yaml
+  - capability/root.yaml
+  - employee_data/root.yaml

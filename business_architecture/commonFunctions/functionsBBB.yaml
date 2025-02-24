@@ -1,0 +1,917 @@
+functions:
+
+  bbbErrorsCount:
+    title: Проверка наличия ошибок в BBB
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: ALL_validators
+        title: Результат работы всех валидаторов
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      type: integer
+    # Код функции
+    code: >
+      (
+        $errors:= $Card_Validators(ALL_validators, bbb);
+
+        $count($errors) + 1 /* функции по какой-то причине не могут возвращать 0, поэтому делаем такой костыль */
+      )
+  getIDbyPath:
+    title: Получение ID объекта из instancePath валидатора по схеме
+    params:
+      - alias: path # Например, "/automatedSystem/CI00571307/checkList/0"
+        title: instancePath
+        required: true
+    result:
+      type: string
+    code: >
+      (
+          $path:= path;
+          $parts:= $split($path, "/");
+          $parts[2]      
+      )
+
+  validatorHeader1:
+    title: Проверка наличия ошибок в BBB (Валидатор шапки карточки BBB)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+        /* Создаем валидатор JSON schema */
+        $validator := $jsonschema(gc.entities.automated_capability.schema_header_1);  /* Схему валидата получаем из контекста отклонения (rules.validators.system.schema)*/
+        $condition:= bbb ? "id='" & bbb & "'" : "true";
+        /* Формируем базу для проверки */
+        ([
+          gc.automated_capability.$spread().( /* Сканируем все компоненты */
+            $object:= $; 
+            $AUTOMATED_CAPABILITY_ID := $keys()[0];            
+            {                                                               /* Генерируем массив признаков проблем */        
+              "id": $AUTOMATED_CAPABILITY_ID,
+              "title": $object.*.title,
+              "grace_period": "2024-02-04",
+              "isvalid": $validator($.*)      /* Валидируем компонент по схеме */									
+            }
+          )        
+        ][isvalid != true and $eval($condition)]).isvalid.{   
+            "id": %.id,
+            "uid": %.title  & "-" & $replace($replace(instancePath, "/", "-"), "-", "",1) & "<header>", 
+             "location": "/entities/automated_capability/automated_capability_card?id=" & %.id,
+             "error_group":"Ошибка в шапке карточки",
+            "grace_period": $substring($now(),0,10) <= %.grace_period ? %.grace_period: "",
+            "correction": "Необходимо корректно заполнить реквизит карточки BBB: "& $replace(instancePath, "/", "",1),                       
+            "description": message
+          }
+      )
+
+  validatorHeader2:
+    title: Проверка наличия ошибок в BBB (Валидатор шапки карточки BBB_ID)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+      	$condition:= bbb ? "id='" & bbb & "'" : "true";
+
+      	[([
+      	  gc.automated_capability.$spread().( /* Сканируем все компоненты */
+
+      		$object:= $; 
+      		$AUTOMATED_CAPABILITY_ID := $keys()[0];
+      		$zamena:= $replace($AUTOMATED_CAPABILITY_ID,/^[a-zA-Z0-9_]{1,20}$/,"") != "";
+
+      		{                                                               /* Генерируем массив признаков проблем */        
+      		 "id": $AUTOMATED_CAPABILITY_ID,
+      		 "title": $object.*.title,
+             "grace_period": "2024-02-11",
+      		 "zamena": $zamena
+      		}
+      	  )        
+      	][zamena and $eval($condition)])].{
+           "id": id,
+           "uid": title  & " - " & id,      
+           "location": "/entities/automated_capability/automated_capability_card?id=" & id,
+           "error_group":"Ошибка в шапке карточки",
+            "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",
+           "correction": "Необходимо корректно заполнить ID карточки BBB",                       
+           "description": "Неверно заполнен ID карточки BBB. ID должен соответствовать шаблону: ^[a-zA-Z0-9_]{1,20}$" 
+          }
+      )
+
+  validatorAPI:
+    title: Проверка наличия ошибок в BBB (Валидатор API)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+          /* Создаем валидатор JSON schema */
+          $validator := $jsonschema(gc.entities.automated_capability.schema_interface_type);  /* Схему валидата получаем из контекста отклонения */
+          $condition:= bbb ? "true";
+          /* Формируем базу для проверки */
+          [
+          gc.automated_capability.$spread().( /* Сканируем все компоненты */
+              $object:= $; 
+              $AUTOMATED_CAPABILITY_ID := $keys()[0];
+              $status:= $object.*.status;
+              $status = "Планирование"? [] :
+              {                                                               /* Генерируем массив признаков проблем */        
+              "id": $AUTOMATED_CAPABILITY_ID,
+              "title": $object.*.title,
+              "interface_type":$object.**.interface_type,
+              "grace_period": "2024-02-04",
+              "isvalid": $validator($.*) 
+              }
+          )        
+          ][isvalid != true and $eval($condition)].isvalid.{
+            "id": %.id,
+            "uid": %.title & "-" & $replace($replace(instancePath, "/", "-"), "-", "",1) & "<api>", 
+            "location": "/entities/automated_capability/automated_capability_card?id=" & %.id,
+            "error_group":"Ошибка в типе интерфейса",
+            "grace_period": $substring($now(),0,10) <= %.grace_period ? %.grace_period: "",
+            "correction": %.interface_type = %.interface_type ? "Необходимо указать один из следующих типов интерфейсов (API, event)": "Необходимо заполнить интерфейсы",                       
+            "description": %.interface_type = %.interface_type ? "Неверно указан тип интерфейса "& $replace(instancePath, "/", "",1): "Интерфейсы не заполнены "
+          }
+      )
+
+  validatorIntegrations:
+    title: Проверка наличия ошибок в BBB (валидатор INTEGRATIONS)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+          $condition:= bbb ? "true";
+          $bbs:= gc.automated_capability.$keys();
+          /* Формируем базу для проверки */
+          [
+              gc.automated_capability.$spread().( /* Сканируем все компоненты */
+
+                                  $object:= $;
+                                  $AUTOMATED_CAPABILITY_ID := $object.$keys()[0];
+                                  $status:= $object.*.status;
+                                  $status = "Планирование"? [] :
+                                  $map(*.integrations, function($v,$i){(
+                                  $proverka:= (
+                                      $checkSource:= $v.source in $bbs;
+                                      $checkSource ? $not(false in $checkSource) : false
+                                      );
+                                  $proverka2:= $proverka!=true;
+
+                                  {                                                                      
+                                  "id": $AUTOMATED_CAPABILITY_ID,
+                                  "title": $object.*.title,
+                                  "validate_source": $proverka2,
+                                  "source": $v.source,
+                                  "source_index": $i,
+                                  "grace_period": "2024-02-10" 
+                                  }
+                              )}
+                              )
+                              )
+          ][validate_source and $eval($condition)].{ 
+                     "id": id,
+                     "uid": source=source ? title  &" - "&  $replace(source,/[?\/]/,"_") & [source_index]  : title  &  source, 
+                     "location": "/entities/automated_capability/automated_capability_card?id=" & id,
+                     "error_group":"Ошибка в интеграции",
+                     "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",      
+                     "correction": source = source ? "Поле интеграции должно  быть заполнено существующим ID BBB":"Необходимо заполнить интеграции",                       
+                     "description":source = source ? "Интеграция c "& source & " заполнена не корректно": "Отсутствуют интеграции"
+                   })
+  validatorScenarios:
+    title: Проверка наличия ошибок в BBB (Валидатор сценариев в BBB)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+                /* Создаем валидатор JSON schema */
+                $validator := $jsonschema(gc.entities.automated_capability.schema_scenarios);  /* Схему валидата получаем из контекста отклонения */
+                $condition:= bbb ? "id='" & bbb & "'" : "true";
+                /* Формируем базу для проверки */
+                $result := gc.automated_capability.$spread().( /* Сканируем все компоненты */
+                    $object:= $; 
+                    $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                    $status:= $object.*.status;
+                    $status = "Планирование"? [] :
+                    {                                                            /* Генерируем массив признаков проблем */        
+                        "id": $AUTOMATED_CAPABILITY_ID,
+                        "title": $object.*.title,      
+                        "grace_period": "2024-09-30",
+                        "isvalid": $validator($.*) 
+                    }      
+                );
+
+                /* Обертываем результат в массив, если он не является массивом */
+                $result := $type($result) = "array" ? $result : [$result];
+
+                /* Фильтруем и формируем окончательный результат */
+                $filteredResult := $result[isvalid != true and $eval($condition)].isvalid.{
+                    "id": %.id,
+                    "uid": %.title & "-" & $replace($replace(instancePath, "/", "-"), "-", "",1) & "<scenarios>", 
+                    "location": "/entities/automated_capability/automated_capability_card?id=" & %.id,
+                    "error_group":"Ошибка в сценариях (базовый+архитектурный домен)",
+                    "grace_period": $substring($now(),0,10) <= %.grace_period ? %.grace_period: "",
+                    "correction": "Необходимо корректно заполнить сценарий в карточке BBB: "& $replace(instancePath, "/", "",1),                       
+                    "description": message
+                };
+
+                /* Обертываем окончательный результат в массив */
+                $finalResult := $type($filteredResult) = "array" ? $filteredResult : [$filteredResult];
+
+                $finalResult
+            )
+  validatorScenariosBusiness:
+    title: Проверка наличия ошибок в BBB (Валидатор сценариев в BBB)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+          $bbs:= gc.automated_capability;
+          /* Создаем валидатор JSON schema */
+          $validator := $jsonschema(gc.entities.automated_capability_business.schema_scenarios_business);  /* Схему валидата получаем из контекста отклонения */
+          $condition:= bbb ? "id='" & bbb & "'" : "true";
+          /* Формируем базу для проверки */
+          $result := gc.automated_capability_business.$spread().( /* Сканируем все компоненты */
+              $object:= $; 
+              $AUTOMATED_CAPABILITY_ID := $keys()[0];
+              $status:= $lookup($bbs, $AUTOMATED_CAPABILITY_ID).status;
+              $status = "Планирование"? [] :        
+              {                                                               /* Генерируем массив признаков проблем */        
+                  "id": $AUTOMATED_CAPABILITY_ID,
+                  "title": $lookup($bbs, $AUTOMATED_CAPABILITY_ID).title,
+                  "scenario_id": id,
+                  "scenario_sla": sla,
+                  "grace_period": "2024-09-30",
+                  "isvalid": $validator($.*) 
+              }
+          );
+
+          /* Обертываем результат в массив, если он не является массивом */
+          $result := $type($result) = "array" ? $result : [$result];
+
+          /* Фильтруем и формируем окончательный результат */
+          $filteredResult := $result[isvalid != true and $eval($condition)].isvalid.{
+              "id": %.id,
+              "uid": %.title & "-" & $replace($replace(instancePath, "/", "-"), "-", "",1) &" "& "<scenarios_business>", 
+              "location": "/entities/automated_capability/automated_capability_card?id=" & %.id,
+              "error_group":"Ошибка в сценариях (бизнес-домен)",
+              "grace_period": $substring($now(),0,10) <= %.grace_period ? %.grace_period: "",
+              "correction": "Необходимо корректно заполнить сценарий в карточке BBB: "& $replace(instancePath, "/", "",1),                       
+              "description": message
+          };
+
+          /* Обертываем окончательный результат в массив */
+          $finalResult := $type($filteredResult) = "array" ? $filteredResult : [$filteredResult];
+
+          $finalResult
+      )
+  validatorScenariosIdBusiness:
+    title: Валидатор проверки переноса id сценариев (бизнес-домен)
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+                    $gc:= gc;
+                    $bbb:= bbb;
+                    $condition:= $bbb ? "id='" & $bbb & "'" : "true";
+                    $bbs:= $gc.automated_capability;
+                    /* Формируем базу для проверки */
+
+                    $result :=$gc.automated_capability_business.$spread().( /* Сканируем все компоненты */
+
+                    $object:= $; 
+                    $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                    $BBB_base:= $lookup($bbs,$AUTOMATED_CAPABILITY_ID);
+                    $status:= $BBB_base.status;
+                    $status = "Планирование"? [] :
+                    *.scenarios.(
+                      {
+                      "id_BBB": $AUTOMATED_CAPABILITY_ID,
+                      "title": $BBB_base.title,
+                      "id_scenario": id,
+                      "grace_period": "2024-10-19",
+                      "proverka": id in $BBB_base.scenarios.id = true ? "true": "false"
+                      }
+                      )[proverka="false"]
+                  );
+                  $result := $type($result) = "array" ? $result : [$result];
+
+                  $filteredResult := $result[proverka and $eval($condition)].{
+                  "id": id_BBB,
+                  "uid": title &" - "&  $replace(id_scenario,/[?\/]/,"_"),
+                  "location": "/entities/automated_capability/automated_capability_card?id=" & id_BBB,
+                  "error_group":"Ошибка в сценариях (бизнес-атрибуты)",
+                  "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",      
+                  "correction": "Корректно перенесите id вашего сценария из базовых и архитектурных атрибутов BBB вместо:" & id_scenario & "\n" & "Инструкция по корректному заполнению сценариев: https://confluence.sberbank.ru/pages/viewpage.action?pageId=16629470223",                       
+                  "description":"Id сценария"&" - "& id_scenario & " не соответствует ни одному из определенных в базовых и архитектурных атрибутах BBB"
+                  };
+                  $finalResult := $type($filteredResult) = "array" ? $filteredResult : [$filteredResult];
+
+                  $finalResult
+
+            )
+  validator_Unique_Id_Scenario:
+    title: Проверка уникальности сценариев в BBB
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+                $gc:= gc;
+                $bbb:= bbb;
+                $condition:= $bbb ? "id='" & $bbb & "'" : "true";
+
+                  $result :=$gc.automated_capability.$spread().( /* Сканируем все компоненты */
+
+                  $object:= $;
+                  $AUTOMATED_CAPABILITY_ID := $object.$keys()[0];
+                  $status:= $object.*.status;
+                  $scenarios:= $object.*.scenarios.id;
+                  $status = "Планирование"? [] :
+                        *.scenarios.(
+                            {
+                            "id_BBB": $AUTOMATED_CAPABILITY_ID,
+                            "title": $object.*.title,
+                            "id_scenario": id,
+                            "grace_period": "2024-10-19",
+                            "proverka": $count($filter($scenarios,function($scen){$scen = id})) > 1 ? "false" : "true"
+                            }
+                            )[proverka="false"]
+                        );
+                        $result := $type($result) = "array" ? $result : [$result];
+
+                  $filteredResult := $distinct($result[proverka and $eval($condition)].{ 
+                 "id": id_BBB,
+                 "uid": title &" - "&  $replace(id_scenario,/[?\/]/,"_"),
+                 "location": "/entities/automated_capability/automated_capability_card?id=" & id_BBB,
+                 "error_group":"Ошибка в сценариях BBB (базовые и архитектурные атрибуты)",
+                 "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",      
+                 "correction": "Необходимо изменить один из сценариев с id" &" "& id_scenario &" "& ", сделав его c уникальным id" & "\n" & "Инструкция по корректному заполнению сценариев: https://confluence.sberbank.ru/pages/viewpage.action?pageId=16629470223",                       
+                 "description": "Id сценария" &" - "& id_scenario &" "& "не уникален и встречается несколько раз в паспорте этого BBB"
+            });
+              $finalResult := $type($filteredResult) = "array" ? $filteredResult : [$filteredResult];
+
+              $finalResult     
+
+            )
+  validator_BBB_ID_Business:
+    title: Проверка переноса ID BBB в бизнес-домен
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход идентификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    #    result:
+    #      type: array
+    # Код функции
+    code: >
+      (
+               $gc:= gc;
+               $bbb:= bbb;
+               $condition:= $bbb ? "id='" & $bbb & "'" : "true";
+               $bbs:= $gc.automated_capability_business;
+               /* Формируем базу для проверки */
+
+               $result :=$gc.automated_capability.$spread().( /* Сканируем все компоненты */
+
+               $object:= $; 
+               $AUTOMATED_CAPABILITY_ID := $keys()[0];
+               $BBB_base:= $lookup($bbs,$AUTOMATED_CAPABILITY_ID);
+               $status:= $BBB_base.status;
+               $status = "Планирование"? [] :
+               (
+                 {
+                 "id_BBB": $AUTOMATED_CAPABILITY_ID,
+                 "title": $object.*.title,
+                 "proverka": $AUTOMATED_CAPABILITY_ID in $bbs.$keys()? "true":"false" ,
+                 "grace_period": "2024-10-19"
+                 }
+                 )[proverka="false"]
+               );
+             $result := $type($result) = "array" ? $result : [$result];
+
+              $filteredResult := $result[proverka and $eval($condition)].{ 
+                 "id": id_BBB,
+                 "uid": title &" - "& $replace(id_BBB,/[?\/]/,"_"), 
+                 "location": "/entities/automated_capability/automated_capability_card?id=" & id_BBB,
+                 "error_group":"Ошибка в id BBB (бизнес-атрибуты)",
+                 "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",      
+                 "correction": "Необходимо текущий id BBB - "&" "& id_BBB &" "& "корректно перенести в файл с бизнес-атрибутами вашего BBB" & "\n" & "Инструкция по корректному заполнению сценариев: https://confluence.sberbank.ru/pages/viewpage.action?pageId=16629470223",                       
+                 "description": "Id BBB" &" - "& id_BBB &" "& "не был найден в бизнес-атрибутах вашего BBB"
+            };
+              $finalResult := $type($filteredResult) = "array" ? $filteredResult : [$filteredResult];
+
+              $finalResult     
+
+            )
+  validatorBaseCheck:
+    title: Базовый валидатор проверки BBB
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+      - alias: errors_extend
+        type: string     # Требуем на вход статус ошибок
+        required: false  # Признак обязательности параметра функции
+    code: >
+      (      
+              $gc:= gc;
+              $bbb:= bbb;
+              $errors_extend:= errors_extend;
+              $schema := $manifestschema();
+              $validator := $jsonschema($schema);
+              $condition := $bbb ? "id='" & $bbb & "'" : "true";
+              $data := {"automated_capability": $gc.automated_capability,"automated_capability_business": $gc.automated_capability_business};
+
+              $result := [];
+
+              /* Формируем базу для проверки */
+              $errors := $validator($data).{
+                  "id": instancePath ? $getIDbyPath(instancePath): [] ,
+                  "message": message,
+                  "correction": $replace(instancePath, "/", "",1)
+
+              }[$eval($condition)];
+
+              $unique_ids := $distinct($errors.id);
+              $filtered_unique_ids := $unique_ids[$lookup($gc.automated_capability, $).status != "Планирование"];
+              $grace_period:= "2024-10-28";
+              $errors_extend = "true" ?
+              $result := $errors.{
+                  "id": id,
+                  "uid": $lookup($gc.automated_capability, id).title,
+                  "location": "/entities/automated_capability/automated_capability_card?id=" & id,
+                  "error_group": "Валидация BBB по схеме",      
+                  "grace_period": $substring($now(),0,10) <= $grace_period ? $grace_period: "",
+                  "correction": "Необходимо корректно заполнить атрибут карточки BBB:" & correction,
+                  "description": message
+              } :
+              $result := $filtered_unique_ids.{
+                  "id": $,
+                  "uid": $lookup($gc.automated_capability, $).title,
+                  "location": "/entities/automated_capability/automated_capability_card?id=" & $,
+                  "error_group": "Валидация BBB по схеме",
+                  "extend": "Подробнее...",
+                  "link_to_table": "/entities/automated_capability/BBB_errors_extend?id=" & $,
+                  "grace_period": $substring($now(),0,10) <= $grace_period ? $grace_period: "",
+                  "correction": "Инструкция по контролю и исправлению ошибок в IDE: https://confluence.sberbank.ru/pages/viewpage.action?pageId=16723123849",
+                  "description": "В паспорте BBB есть ошибки заполнения, которые необходимо исправить в yaml-файле паспорта в IDE."
+              };
+            
+              $finalResult := $type($result) = "array" ? $result : [$result];
+
+              $finalResult 
+              )
+  ALL_validators:
+    title: Работа всех валидаторов
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      # JSONSchema схема результата. Не обязательно.
+    result:
+      type: array
+      # Код функции
+    code: >
+      (       
+        $gc:= gc;
+        [$reduce([$bbbSourceScenarioExists($gc),$bbbSourceBusinessApiExists($gc),$validatorBaseCheck($gc),$validator_BBB_ID_Business($gc),$validator_Unique_Id_Scenario($gc),$validatorScenariosIdBusiness($gc),$validatorIntegrations($gc),$validatorAPI($gc),$validatorHeader1($gc),$validatorHeader2($gc),$validatorScenarios($gc),$validatorScenariosBusiness($gc)],$append)];
+      )
+  Card_Validators:
+    title: Работа всех валидаторов для карточки
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: ALL_validators
+        title: Результат работы всех валидаторов
+        required: true
+      - alias: card_id
+        title: ID BBB
+        required: true
+      # JSONSchema схема результата. Не обязательно.
+    result:
+      type: array
+      # Код функции
+    code: >
+      (
+        $result:= ALL_validators[id=$$.card_id];
+        $type($result)="array" ? $result : [$result];      
+      )
+
+  bbbSVG:
+    title: Формирует SVG файл для представления BBB на схемах
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+      - alias: color    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Цвет шестиугольника
+        title: BBB Color
+        required: false  # Признак обязательности параметра функции (если не задан, то цвет lightgreen)
+      - alias: scale    # Если задан scale, в функции будет доступна переменная с этим идентификатором
+        type: number  # Коэффициент принудительного масштабирования шестиугольника
+        title: BBB scale
+        required: false  # Признак обязательности параметра функции (если не задан, то 1)
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      type: string
+    # Код функции
+    code: >
+      (
+        $bbbSVG   := gc.svgIcons.hexBBB;
+        $color    := color ? color : "lightgreen";
+        $bbbID    := bbb;
+        $bbbRef   := $bbbID in gc.automated_capability.$keys() ? "/entities/automated_capability/automated_capability_card?id=" & $bbbID:"";
+        $bbbTitle := $bbbID in gc.automated_capability.$keys() ? gc.automated_capability.$eval($bbbID).title: $bbbID;
+        $scale    := scale ? scale : 1;
+        $width    := 210*$scale;
+        $height   := 180*$scale;
+      
+        $bbbSVG := $replace($bbbSVG, "TitlePlaceholder", $bbbTitle);
+        $bbbSVG := $replace($bbbSVG, "RefPlaceholder", $bbbRef);
+        $bbbSVG := $replace($bbbSVG, "lightgreen", $color);
+        $bbbSVG := $replace($bbbSVG, "$width", $string($width));
+        $bbbSVG := $replace($bbbSVG, "$height", $string($height))
+      )
+
+  bbbColorByError:
+    title: Возвращает цвет BBB в зависимости от наличия ошибок в нем
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: ALL_validators
+        title: Результат работы всех валидаторов
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      enum:
+        - lightgreen # Зеленый - нет ошибок.
+        - tomato # Красный - есть ошибки вне грейс-периода
+        - yellow # Желтый - есть ошибки в грейс периоде
+        - gray # Серый - нет ошибок и статус BBB "Планирование"
+    # Код функции
+    code: >
+      (
+        $BBB_ID := bbb;
+        $status:= gc.automated_capability.$eval($BBB_ID).status;
+        $errors:= $Card_Validators(ALL_validators,bbb);
+        $current_errors:= $filter($errors.grace_period,function($v,$i,$a){$v > $now()});
+        $expired_errors:= $filter($errors.grace_period,function($v,$i,$a){$v <= $now()});
+        $grace_p_in:= $count($current_errors);
+        $grace_p_out:= $count($expired_errors);
+
+        $grace_p_out >= 1 ? "tomato": ($grace_p_in >= 1  ? "yellow":($status = "Планирование" ? "gray" :"lightgreen"))
+      )
+
+  bbbColorByStatus:
+    title: Возвращает цвет BBB в зависимости от статуса BBB
+    # Входящие параметры
+    params:
+      # Для каждого параметра описывается JSONSchema
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string  # Требуем на вход идентификатор BBB
+        title: BBB
+        required: true  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+      enum:
+        - lightgreen
+        - tomato
+        - yellow
+        - gray
+    # Код функции
+    code: >
+      (
+        $BBB_ID := bbb;
+        $status:= gc.automated_capability.$eval($BBB_ID).status;
+        $status = "Эксплуатация" ? "lightgreen": ($status = "Проектирование" or $status = "Разработка" ? "yellow":($status = "Выведение" or $status= "Выведен" ? "tomato" :"gray"))
+      )
+  bbbSourceBusinessApiExists:
+    title: Проверка существования указанных business api в источнике.
+    # Входящие параметры
+    params:
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+    # Код функции
+    code: >
+      (
+        $condition:= bbb ? "id='" & bbb & "'" : "true";
+        $bbs := gc.automated_capability;
+          $result := $bbs.$spread().( 
+              $AUTOMATED_CAPABILITY_ID := $keys()[0];
+              $status = "Планирование" ? [] :        
+              *.scenarios.(
+                  $map(trigger_groups.trigger_items.event, function($v, $i) {
+                      $map($v.source, function($src, $j) {
+                          {
+                              "id": $AUTOMATED_CAPABILITY_ID,
+                              "source": $src,
+                              "source_business_api": $v.source_business_api[$j]
+                          }
+                      })
+                  })
+              )
+          );
+          $result_p2 := $bbs.$spread().( 
+            $AUTOMATED_CAPABILITY_ID := $keys()[0];
+            $status = "Планирование" ? [] :        
+            *.scenarios.(
+                  $map(integrations_used, function($v, $i) {
+                      {
+                          "id": $AUTOMATED_CAPABILITY_ID,
+                          "source": $v.source,
+                          "source_business_api": $v.source_business_api
+                      }
+                  })
+              )
+            );
+
+          $result:=$clone($result);
+          $result_p2:=$clone($result_p2);
+          $result:=$append($result,$result_p2);
+
+          $badArrays := $filter($result, function($item){$type($item) = "array"});
+          $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+          $objArrays := $filter($result, function($item){$type($item) = "object"});
+          $bb1:=$append($fixedArray, $objArrays);
+          $bb1_final:=$filter($bb1, function($v){$keys($v)=["id","source","source_business_api"]});
+
+          $bbs:= gc.automated_capability;
+          $result2 := gc.automated_capability.$spread().( 
+          $object:= $; 
+          $AUTOMATED_CAPABILITY_ID := $keys()[0];
+          $status = "Планирование"? [] :        
+          *.(
+          {                                                             
+              "id": $AUTOMATED_CAPABILITY_ID,
+              "scenario_id": business_api.id
+                  }
+          )
+          );
+          $result2 :=$clone($result2);
+
+          $final := $map($bb1_final, function($item, $i) {
+          {
+              "id": $item.id,
+              "title": $lookup($bbs, $item.id).title,
+              "source": $item.source,
+              "sourceIndex": $i,
+              "source_business_api": $item.source_business_api,
+              "found": $exists(
+                  $result2[id=$item.source].scenario_id[
+                      ($type($) = "array" and $contains($, $item.source_business_api))
+                      or
+                      ($type($) = "string" and $ = $item.source_business_api)
+                  ]
+              )
+          }
+      }      
+      );  
+          $result:= $filter($final, function ($v){$v.found=false}).{ 
+                       "id": id,
+                       "uid" : title & sourceIndex,
+                       "location": "/entities/automated_capability/automated_capability_card?id=" & id,
+                       "error_group":"Ошибка в сценариях BBB (базовые и архитектурные атрибуты)",
+                       "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",
+                       "correction": "Укажите верный код business_api, при отсутствии такового, обратиться к владельцу ВВВ",
+                       "description": "Интеграция с BBB " & "\"" & source & "\"" & " происходит по business_api " & "\"" & source_business_api & "\"" & ", который отсутствует в источнике"
+                  };
+          $finalResult := $type($result) = "array" ? $result : [$result];
+
+          $finalResult
+      )
+  bbbSourceScenarioExists:
+    title: Проверка существования указанных source_scenario в источнике.
+    # Входящие параметры
+    params:
+      - alias: gc
+        title: Global context
+        required: true
+      - alias: bbb    # Если задан alias, в функции будет доступна переменная с этим идентификатором
+        type: string     # Требуем на вход иднетификатор BBB
+        title: BBB
+        required: false  # Признак обязательности параметра функции
+    # JSONSchema схема результата. Не обязательно.
+    result:
+    # Код функции
+    code: >
+      (
+              $bbs := gc.automated_capability;
+              $result := $bbs.$spread().( 
+                  $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                  $status = "Планирование" ? [] :        
+                  *.scenarios.(
+                      $map(trigger_groups.trigger_items.event, function($v, $i) {
+                          $map($v.source, function($src, $j) {
+                              {
+                                  "id": $AUTOMATED_CAPABILITY_ID,
+                                  "source": $src,
+                                  "source_scenario": $v.source_scenario
+                              }
+                          })
+                      })
+                  )
+              );
+
+                  $result_p2 := $bbs.$spread().( 
+                              $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                              $status = "Планирование" ? [] :        
+                              *.scenarios.(
+                                  $map(integrations_used, function($v, $i) {
+                                          {
+                                              "id": $AUTOMATED_CAPABILITY_ID,
+                                              "source": $v.source,
+                                              "source_scenario": $v.source_scenario
+                                          }
+                                  })
+                              )
+                          );
+
+              $result:=$clone($result);
+              $result_p2:=$clone($result_p2);
+              $result:=$append($result,$result_p2);
+
+              $badArrays := $filter($result, function($item){$type($item) = "array"});
+              $fixedArray := $reduce($badArrays, function($acc, $item) {$append($acc, $item)},[]);
+              $objArrays := $filter($result, function($item){$type($item) = "object"});
+              $bb1:=$append($fixedArray, $objArrays);
+              $filter_ss_only:=$filter($bb1, function($v){$keys($v)=["id","source","source_scenario"]});
+
+              $bbs:= gc.automated_capability;
+              $result2 := gc.automated_capability.$spread().( 
+              $object:= $; 
+              $AUTOMATED_CAPABILITY_ID := $keys()[0];
+              $status = "Планирование"? [] :        
+              *.(
+              {                                                             
+                  "id": $AUTOMATED_CAPABILITY_ID,
+                  "scenarios": scenarios.id
+                      }
+              )
+              );
+               $result2 :=$clone($result2);
+
+            $final := $map($filter_ss_only, function($item, $i) {
+            {
+                "id": $item.id,
+                "title": $lookup($bbs, $item.id).title,
+                "source": $item.source,
+                "sourceIndex": $i,
+                "source_scenario": $item.source_scenario,
+                "ss_found":$exists(
+                    $result2[id=$item.source].scenarios[
+                        ($type($) = "array" and $contains($, $item.source_scenario))
+                        or
+                        ($type($) = "string" and $ = $item.source_scenario)
+                    ]
+                )
+            }
+        }  
+      );
+      $result:= $filter($final, function ($v){$v.ss_found=false}).{ 
+                             "id": id,
+                             "uid" : title & sourceIndex,
+                             "location": "/entities/automated_capability/automated_capability_card?id=" & id,
+                             "error_group":"Ошибка в сценариях BBB (базовые и архитектурные атрибуты)",
+                             "grace_period": $substring($now(),0,10) <= grace_period ? grace_period: "",
+                             "correction": "Укажите верный код source_scenario, при отсутствии такового, обратиться к владельцу ВВВ",
+                             "description": "Интеграция с BBB " & "\"" & source & "\"" & " происходит по source_scenario " & "\"" & source_scenario & "\"" & ", который отсутствует в источнике"
+                        };
+      
+         $finalResult := $type($result) = "array" ? $result : [$result];
+
+         $finalResult
+      )

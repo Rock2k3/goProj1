@@ -1,0 +1,9 @@
+automated_system:
+  1C_ACC:
+    name: 1С:Бухгалтерия
+    nickname: 1С:Б
+    ci_id: CI00000001
+    description: Система автоматизации бухгалтерского учета
+    full_name: 1С:Бухгалтерия
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

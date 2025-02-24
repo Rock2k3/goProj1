@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://bbb.sber.ru/JournalEvent/1.0.2/root.json",
+  "description": "Сообщение",
+  "type": "object",
+  "properties": {
+    "level": {
+      "description": "Уровень логирования",
+      "type": "string",
+      "maxLength": 50
+    },
+    "logger": {
+      "description": "Логгер",
+      "type": "string",
+      "maxLength": 100
+    },
+    "thread": {
+      "description": "Поток",
+      "type": "string",
+      "maxLength": 100
+    },
+    "timestamp": {
+      "description": "Время в формате unix timestamp",
+      "type": "number"
+    },
+    "message": {
+      "description": "Сообщение опубликованное в лог",
+      "type": "string",
+      "maxLength": 2000
+    },
+    "stackTrace": {
+      "description": "Значение stacktrace при возникновении ошибки",
+      "type": "string",
+      "maxLength": 4000
+    },
+    "requestUid": {
+      "description": "Идентификатор запроса",
+      "type": "string",
+      "maxLength": 100
+    },
+    "requestDepth": {
+      "description": "Глубина запроса, необходима для отслеживания порядка выполнения запроса.",
+      "type": "string",
+      "maxLength": 100
+    },
+    "sessionUid": {
+      "description": "Идентификатор пользовательской сессии",
+      "type": "string",
+      "maxLength": 100
+    },
+    "sessionLogin": {
+      "description": "Логин пользователя",
+      "type": "string",
+      "maxLength": 50
+    },
+    "component": {
+      "description": "Сервис который осуществил запись",
+      "type": "string",
+      "maxLength": 150
+    },
+    "namespace": {
+      "description": "Пространство имен приложения",
+      "type": "string",
+      "maxLength": 500
+    },
+    "hostname": {
+      "description": "Имя хоста",
+      "type": "string",
+      "maxLength": 500
+    },
+    "pod": {
+      "description": "Имя пода",
+      "type": "string",
+      "maxLength": 100
+    },
+    "cluster": {
+      "description": "Идентификатор кластера, уникальный для этого сервиса на стенде",
+      "type": "string",
+      "maxLength": 100
+    },
+    "nodeId": {
+      "description": "Имя ноды на которой запушен под",
+      "type": "string",
+      "maxLength": 100
+    },
+    "additionalParameters": {
+      "description": "Список доп. параметров",
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "level",
+    "logger",
+    "thread",
+    "timestamp",
+    "message",
+    "requestUid",
+    "component",
+    "namespace",
+    "hostname",
+    "pod",
+    "cluster",
+    "nodeId"
+  ],
+  "additionalProperties": false
+}

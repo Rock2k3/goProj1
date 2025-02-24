@@ -1,0 +1,8 @@
+automated_capability_business:
+  MII:
+    scenarios:
+      - id: ITEMS_REPLENISHMENT
+        sla: 5
+      - id: ITEMS_REPLENISHMENT_TASK
+        sla: 5
+

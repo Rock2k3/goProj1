@@ -1,0 +1,9 @@
+automated_system:
+  INV_ACC:
+    name: Учет ТМЦ
+    nickname: УТМЦ
+    ci_id: CI00000004
+    description: Система  для учета товарно-материальных ценностей (ТМЦ) на предприятии
+    full_name: Учет ТМЦ
+    system_type: AS
+    as_ref: https://www.sberbank.ru/

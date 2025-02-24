@@ -1,0 +1,139 @@
+activity_event_table:
+  base:
+    IS_ROLLING_BACK:
+      activity_event_type: ACTIVITY_IN_ACTION
+      mandatory: depends_on
+      comments: " "
+    HAS_ROLLED_BACK:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: depends_on
+      comments: " "
+    INITIATED:
+      activity_event_type: ACTIVITY_INIT
+      mandatory: depends_on
+      comments: " "
+    ACCEPTED:
+      activity_event_type: ACTIVITY_IN_ACTION
+      mandatory: depends_on
+      comments: " "
+    SKIPPED:
+      activity_event_type: ACTIVITY_IN_ACTION
+      mandatory: depends_on
+      comments: " "
+    STARTED:
+      activity_event_type: ACTIVITY_IN_ACTION
+      mandatory: Обязательно
+      comments: " "
+    RUNNING:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: Обязательно
+      comments: " "
+    CANCELLED:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: Должен поддерживаться
+      comments: У сценария обязательно должно быть одно из событий ACTIVITY_RESULT.POSITIVE_ENDING, ACTIVITY_RESULT.NEUTRAL_ENDING, ACTIVITY_RESULT.NEGATIVE_ENDING или ACTIVITY_ERRORS.FAULT или ACTIVITY_STATE.CANCELLED
+    DATA_WAITING:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: Опционально
+      comments: " "
+    EVENT_WAITING:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: depends_on
+      comments: " "
+    HOLD:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: Опционально
+      comments: " "
+    PAUSED:
+      activity_event_type: ACTIVITY_STATE
+      mandatory: Опционально
+      comments: " "
+    POSITIVE_ENDING:
+      activity_event_type: ACTIVITY_RESULT
+      mandatory: Должен поддерживаться
+      comments: У сценария обязательно должно быть одно из событий ACTIVITY_RESULT.POSITIVE_ENDING, ACTIVITY_RESULT.NEUTRAL_ENDING, ACTIVITY_RESULT.NEGATIVE_ENDING или ACTIVITY_ERRORS.FAULT или ACTIVITY_STATE.CANCELLED
+    NEUTRAL_ENDING:
+      activity_event_type: ACTIVITY_RESULT
+      mandatory: Должен поддерживаться
+      comments: У сценария обязательно должно быть одно из событий ACTIVITY_RESULT.POSITIVE_ENDING, ACTIVITY_RESULT.NEUTRAL_ENDING, ACTIVITY_RESULT.NEGATIVE_ENDING или ACTIVITY_ERRORS.FAULT или ACTIVITY_STATE.CANCELLED
+    NEGATIVE_ENDING:
+      activity_event_type: ACTIVITY_RESULT
+      mandatory: Должен поддерживаться
+      comments: У сценария обязательно должно быть одно из событий ACTIVITY_RESULT.POSITIVE_ENDING, ACTIVITY_RESULT.NEUTRAL_ENDING, ACTIVITY_RESULT.NEGATIVE_ENDING или ACTIVITY_ERRORS.FAULT или ACTIVITY_STATE.CANCELLED
+    FAULT:
+      activity_event_type: ACTIVITY_ERRORS
+      mandatory: Должен поддерживаться
+      comments: У сценария обязательно должно быть одно из событий ACTIVITY_RESULT.POSITIVE_ENDING, ACTIVITY_RESULT.NEUTRAL_ENDING, ACTIVITY_RESULT.NEGATIVE_ENDING или ACTIVITY_ERRORS.FAULT или ACTIVITY_STATE.CANCELLED
+    RUNNING...HOLD:
+      activity_event_type: ACTIVITY_ERRORS
+      mandatory: depends_on
+      comments: " "
+    RUNNING ... HOLD body.service.slaState{}:
+      activity_event_type: ACTIVITY_STATE_SLA
+      mandatory: Должен поддерживаться
+      comments: " "
+    MALFUNCTION:
+      activity_event_type: ACTIVITY_EXECUTE_SCENARIO_FAILED
+      mandatory: Должен поддерживаться
+      comments: " "
+
+  autonomus:
+    IS_ROLLING_BACK:
+      mandatory: Не публикуется
+    HAS_ROLLED_BACK:
+      mandatory: Не публикуется
+    INITIATED:
+      mandatory: Не публикуется
+    ACCEPTED:
+      mandatory: Не публикуется
+    SKIPPED:
+      mandatory: Не публикуется
+    EVENT_WAITING:
+      mandatory: Не публикуется
+    RUNNING...HOLD:
+      mandatory: Должен поддерживаться
+  parent:
+    IS_ROLLING_BACK:
+      mandatory: Должен поддерживаться
+    HAS_ROLLED_BACK:
+      mandatory: Должен поддерживаться
+    INITIATED:
+      mandatory: Обязательно
+    ACCEPTED:
+      mandatory: Не публикуется
+    SKIPPED:
+      mandatory: Не публикуется
+    EVENT_WAITING:
+      mandatory: Должен поддерживаться
+    RUNNING...HOLD:
+      mandatory: Опционально
+  children:
+    IS_ROLLING_BACK:
+      mandatory: Должен поддерживаться
+    HAS_ROLLED_BACK:
+      mandatory: Должен поддерживаться
+    INITIATED:
+      mandatory: Не публикуется
+    ACCEPTED:
+      mandatory: Обязательно
+    SKIPPED:
+      mandatory: Должен поддерживаться
+    EVENT_WAITING:
+      mandatory: Не публикуется
+    RUNNING...HOLD:
+      mandatory: Опционально
+  parent_children:
+    IS_ROLLING_BACK:
+      mandatory: Должен поддерживаться
+    HAS_ROLLED_BACK:
+      mandatory: Должен поддерживаться
+    INITIATED:
+      mandatory: Обязательно
+    ACCEPTED:
+      mandatory: Обязательно
+    SKIPPED:
+      mandatory: Должен поддерживаться
+    EVENT_WAITING:
+      mandatory: Должен поддерживаться
+    RUNNING...HOLD:
+      mandatory: Опционально

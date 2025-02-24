@@ -1,0 +1,5 @@
+automated_capability_business:
+  IRON:
+    scenarios:
+      - id: IRONING
+        sla: 30

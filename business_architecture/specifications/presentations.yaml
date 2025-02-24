@@ -1,0 +1,33 @@
+datasets:
+  datasets.specifications.b3event:
+    source: bbb_events/b3event.json
+  datasets.specifications.journalevent:
+    source: bbb_events/journalevent.json
+  datasets.specifications.monitoringevent:
+    source: bbb_events/monitoringevent.json
+
+docs:
+  docs.specifications.b3event:
+    title: Схема события B3Event
+    type: markdown
+    location: "/Схемы событий BBB/B3Event.json"
+    template: b3event.md
+    origin: datasets.specifications.b3event
+    source: >
+      ({'json_string': $string($, true)})
+  docs.specifications.journalevent:
+    title: Схема события Event
+    type: markdown
+    location: "/Схемы событий BBB/JournalEvent.json"
+    template: journalevent.md
+    origin: datasets.specifications.journalevent
+    source: >
+      ({'json_string': $string($, true)})
+  docs.specifications.monitoringevent:
+    title: Схема события Event
+    type: markdown
+    location: "/Схемы событий BBB/MonitoringEvent.json"
+    template: monitoringevent.md
+    origin: datasets.specifications.monitoringevent
+    source: >
+      ({'json_string': $string($, true)})

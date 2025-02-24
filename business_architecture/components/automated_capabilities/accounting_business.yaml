@@ -1,0 +1,7 @@
+automated_capability_business:
+  ACC:
+    scenarios:
+      - id: ACCOUNTING_RECORD_GENERATION
+        sla: 1
+      - id: ACCOUNTING_REPORT_GENERATION
+        sla: 5

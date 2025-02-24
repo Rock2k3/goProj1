@@ -1,0 +1,73 @@
+automated_capability:
+  FINANCE:
+    title: Финансы
+    owner_block: Химчистка
+    owner_tribe: Отдел финансов
+    description: 'Блок предназначен для автоматизации финансовых процессов'
+    status: Эксплуатация
+    responsibles:
+      owner: "56"
+      Methodologist: "56"
+      EAArchitect: "57"
+      solution_architector: "58"
+      development_team:
+        contactInfo:
+          - "FINANCE_team@ourLoundry.ru"
+        team_members:
+          - "59"
+      support_team:
+        IFT:
+          contactInfo:
+            - "FINANCE_team@ourLoundry.ru"
+          team_members:
+            - "60"
+        PSI:
+          contactInfo:
+            - "FINANCE_team@ourLoundry.ru"
+          team_members:
+            - "60"
+        PROM:
+          contactInfo:
+            - "FINANCE_team@ourLoundry.ru"
+          team_members:
+            - "60"
+    business_functions:
+      PRICING:
+        title: Ценообразование
+        description: 'Функция позволяет определять и устанавливать цены на услуги'
+    business_entities:
+      PRICE:
+        summary: Цена услуги
+        description: Цена на конкретную услугу Химчистки
+    scenarios:
+      - id: PRICE_RECALCULATION
+        title: Обновление цены на услугу
+        automated_level: auto
+        business_function: PRICING
+        status: Эксплуатация
+        children_scenario_allowed: false
+        trigger_groups:
+          - group_name: Основная
+            trigger_items:
+              - type: inner_logic
+                title: Обновление данных для расчета цены на услуги
+                description: 'Алгоритм расчета цены на услуги запускается периодически, обрабатывает данные по себестоимости, целевым показателям доходности и мониторинга цен конкурентов.'
+        integrations_used:
+          - source: ACC
+            source_business_api: GET_REPORT
+            description: Получение отчета по себестоимости производства
+            status: Эксплуатация
+    business_api:
+      - id: PRICE_UPDATE
+        api_type: business_event
+        title: Изменение статуса новости
+        status: Эксплуатация
+        business_entity: PRICE
+      - id: GET_PRICE
+        api_type: getter
+        title: Получение цены услуги
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+        business_entity: PRICE
+    systems:
+      - 1C_HOLDING

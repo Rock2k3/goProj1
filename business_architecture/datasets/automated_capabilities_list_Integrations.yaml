@@ -1,0 +1,48 @@
+datasets:
+
+  datasets.automated_capabilities_list_Integrations:
+    source: >
+      (      
+        automated_capability.$spread().(
+           $ac:= $.*;
+           $AUTOMATED_CAPABILITY_ID:= $keys()[0];
+           $.*.scenarios.integrations_used.
+           {
+           "title": $ac.title,
+           "id": $AUTOMATED_CAPABILITY_ID,      
+           "source": source,
+           "source_business_api": source_business_api,
+           "source_scenario": source_scenario,
+           "source_activity_type": source_activity_type,
+           "source_scenario_state": source_scenario_state,
+           "title_integrations": title,
+           "description_integrations": description,
+           "status": status,
+           "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID,
+           "link_to_source": "/entities/automated_capability/automated_capability_card?id=" & "source"
+       }
+       )
+       )
+  datasets.automated_capabilities_list_events:
+    source: >
+      (      
+        automated_capability.$spread().(
+           $ac:= $.*;
+           $AUTOMATED_CAPABILITY_ID:= $keys()[0];
+           $.*.scenarios.trigger_groups.trigger_items.event.
+           {
+           "title": $ac.title,
+           "id": $AUTOMATED_CAPABILITY_ID,      
+           "source": source,
+           "source_business_api": source_business_api,
+           "source_scenario": source_scenario,
+           "source_activity_type": source_activity_type,
+           "source_scenario_state": source_scenario_state,
+           "title_integrations": title,
+           "description_integrations": description,
+           "status": status,
+           "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID,
+           "link_to_source": "/entities/automated_capability/automated_capability_card?id=" & "source"
+       }
+       )
+       )

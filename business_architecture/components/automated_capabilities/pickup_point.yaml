@@ -1,0 +1,111 @@
+automated_capability:
+  PP:
+    title: ПВЗ
+    owner_block: Химчистка
+    owner_tribe: Отдел обслуживания клиентов
+    description: 'Блок предназначен для автоматизации процессов приема и выдачи заказов в пунктах выдачи заказов (ПВЗ).'
+    status: Эксплуатация
+    responsibles:
+      owner: "9"
+      Methodologist: "9"
+      EAArchitect: "20"
+      solution_architector: "31"
+      development_team:
+        contactInfo:
+          - "PP_team@ourLoundry.ru"
+        team_members:
+          - "42"
+      support_team:
+        IFT:
+          contactInfo:
+            - "PP_team@ourLoundry.ru"
+          team_members:
+            - "53"
+        PSI:
+          contactInfo:
+            - "PP_team@ourLoundry.ru"
+          team_members:
+            - "53"
+        PROM:
+          contactInfo:
+            - "PP_team@ourLoundry.ru"
+          team_members:
+            - "53"
+    business_entities:
+      APPLICATION:
+        summary: Заказ
+        description: Заявка на заказ от клиента на выполнение работ с набором услуг химчистки.
+    business_functions:
+      ACCEPT_ORDER:
+        title: Прием заказа от клиента
+        description: 'Функция отвечает за прием заказов от клиентов, ввод данных о заказе в систему и инициацию процесса обработки заказа.'
+      ORDER_DELIVERY:
+        title: Выдача заказа клиенту
+        description: 'Функция отвечает за процесс выдачи заказов клиентам, включая проверку подлинности, подтверждение статуса заказа и физическую передачу товара.'
+    systems:
+      - CRSM
+    scenarios:
+      - id: APPLICATION_SUBMITTING
+        business_function: ACCEPT_ORDER
+        title: Оформление заказа
+        status: Эксплуатация
+        automated_level: auto
+        description: Прием/оформление заявки клиента на выполнение работ с набором услуг химчистки в ПВЗ.
+        children_scenario_allowed: true
+        trigger_groups:
+          - group_name: Оформление заказа клиентом в ПВЗ
+            trigger_items:
+              - type: inner_logic
+                title: Оформление заказа в ПВЗ
+                description: Клиент пришел в ПВЗ и оформляет заказа вместе с оператором.
+        business_events_produced:
+          - APPLICATION_SET
+        integrations_used:
+          - source: CP
+            source_business_api: CLIENT_PROFILE_DATA
+            status: Эксплуатация
+            description: Получение данных о клиенте
+          - source: CP
+            source_business_api: CLIENT_PROFILE_UPDATE
+            status: Эксплуатация
+            description: Создание нового клиента
+      - id: ORDER_DELIVERY
+        business_function: ORDER_DELIVERY
+        title: Выдача заказа клиенту
+        status: Эксплуатация
+        automated_level: auto
+        description: Выдача заказа клиенту.
+        children_scenario_allowed: true
+        trigger_groups:
+          - group_name: Завершение работ по заказу
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: ORDER_CLOSING
+                  source_scenario_state: POSITIVE_ENDING
+                  source_activity_type: ACTIVITY_RESULT
+        business_events_produced:
+          - APPLICATION_SET
+    business_api:
+      - id: APPLICATION_SET
+        api_type: business_event
+        title: Получен заказ от клиента
+        business_entity: APPLICATION
+        status: Эксплуатация
+      - id: APPLICATION_DETAILS
+        api_type: getter
+        business_entity: APPLICATION
+        title: Получение деталей заказа
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: APPLICATION_READY
+        api_type: business_event
+        business_entity: APPLICATION
+        title: Уведомление о готовности заказа
+        status: Эксплуатация
+      - id: APPLICATION_PICKED
+        api_type: business_event
+        business_entity: APPLICATION
+        title: Уведомление о выдаче заказа
+        status: Эксплуатация

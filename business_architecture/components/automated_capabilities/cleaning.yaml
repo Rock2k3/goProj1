@@ -1,0 +1,95 @@
+automated_capability:
+  CLE:
+    title: Химчистка
+    owner_block: Химчистка
+    owner_tribe: Производственный отдел
+    description: 'Блок предназначен для автоматизации и оптимизации процессов химчистки и обработки одежды.'
+    status: Эксплуатация
+    responsibles:
+      owner: "2"
+      Methodologist: "2"
+      EAArchitect: "13"
+      solution_architector: "24"
+      development_team:
+        contactInfo:
+          - "CLE_team@ourLoundry.ru"
+        team_members:
+          - "35"
+      support_team:
+        IFT:
+          contactInfo:
+            - "CLE_team@ourLoundry.ru"
+          team_members:
+            - "46"
+        PSI:
+          contactInfo:
+            - "CLE_team@ourLoundry.ru"
+          team_members:
+            - "46"
+        PROM:
+          contactInfo:
+            - "CLE_team@ourLoundry.ru"
+          team_members:
+            - "46"
+    business_functions:
+      DRY_CLEANING:
+        title: Химчистка
+        description: 'Функция отвечает за организацию и контроль процесса химчистки одежды, включая выбор режимов обработки, контроль качества и отслеживание производственных показателей.'
+    business_entities:
+      DRY_CLEANING_JOB:
+        summary: Задача на химчистку
+    scenarios:
+      - id: DRY_CLEANING
+        title: Химчистка
+        description: Химчистка одежды и других вещей
+        business_function: DRY_CLEANING
+        status: Эксплуатация
+        automated_level: semi_auto
+        children_scenario_allowed: true
+        business_events_produced:
+          - DRY_CLEANING_JOB_UPDATE
+        trigger_groups:
+          - group_name: Main
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: ORDER_PROCESSING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+                  status: Эксплуатация
+      - id: EQUIPMENT_CHECKUP
+        title: Проверка оборудования
+        description: > 
+          Ежедневная проверка оборудования перед началом рабочей смены. Если обнаружена неисправность,
+          то будет сформирован запрос в Технический отдел.
+        children_scenario_allowed: false
+        automated_level: auto
+        status: Эксплуатация
+        business_events_produced:
+          - DRY_CLEANING_JOB_UPDATE
+        integrations_used:
+          - source: EQM
+            source_business_api: EQUIPMENT_MAINTENANCE_REQUEST
+            status: Эксплуатация
+        trigger_groups:
+          - group_name: Main
+            trigger_items:
+              - type: inner_logic
+                title: По расписанию
+                description: Проверка запускается регулярно в соответсвии с регламентом Р-213 отдела Химчистки
+    business_api:
+      - id: DRY_CLEANING_JOB_UPDATE
+        # api_type: business_event
+        api_type: business_event
+        title: Изменение статуса задачи на химчистку
+        business_entity: DRY_CLEANING_JOB
+        status: Эксплуатация
+      - id: DRY_CLEANING_JOB_DETAILS
+        api_type: getter
+        title: Получение статуса задачи на Химчистку
+        business_entity: DRY_CLEANING_JOB
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+    systems:
+      - TMS

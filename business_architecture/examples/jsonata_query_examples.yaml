@@ -1,0 +1,14 @@
+# Запрос, который получит массив объектов BBB, сгруппированных по одному из атрибутов.
+# В данном примере, группируем данные BBB по Блоку.
+
+query: >
+  (
+    {
+      "blocks": automated_capability{owner_block: code[]} ~> $each(function($v, $k) {
+      {
+        "resultDate": $k,
+        "codes": $v.{"code": $}
+      }
+    })
+    }
+  )

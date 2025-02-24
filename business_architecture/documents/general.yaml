@@ -1,0 +1,6 @@
+docs:
+    dochub.welcome:
+      title: Стартовая страница
+      type: markdown
+      location: "/Документы/03. Примеры функциональности/99. Welcome"
+      source: general/welcome.md

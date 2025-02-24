@@ -1,0 +1,625 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+
+  automated_capability:
+
+    presentations:
+
+      # Карточка BBB с закладками.
+      #
+
+      automated_capability_card: # Карточка объекта. Начинается на закладке "Основные атрибуты".
+        type: markdown
+        template: templates_card/automated_capability_card_page_main.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      automated_capability_card_page_interfaces: # Карточка объекта. Закладка "Интерфейсы".
+        type: markdown
+        template: templates_card/automated_capability_card_page_interfaces.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      automated_capability_card_page_integrations: # Карточка объекта. Закладка "Интеграции"
+        type: markdown
+        template: templates_card/automated_capability_card_page_integrations.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      automated_capability_card_page_consumers: # Карточка объекта. Закладка "Потребители"
+        type: markdown
+        template: templates_card/automated_capability_card_page_consumers.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      automated_capability_card_page_environment_diagram: # Карточка объекта. Закладка "Потребители"
+        type: markdown
+        template: templates_card/automated_capability_card_page_environment_diagram.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+      automated_capability_card_page_functions: # Карточка объекта. Закладка "Функции и сценарии".
+        type: markdown
+        template: templates_card/automated_capability_card_page_functions.md
+        source: >
+          (   
+           $BBB_ID:= $params.id;
+           $Scenario_id:= $params.Scenario_id ? $params.Scenario_id : $getScenarioList($$.automated_capability.$eval($BBB_ID));
+           $merge([$getBBBCardData($$,$BBB_ID),
+                   {"id": $BBB_ID},          
+                   {"Scenario_id": $encodeUrl($Scenario_id)},
+                   {"tabsScenarios": $generateScenariosListTabs($$,$BBB_ID,$Scenario_id)}
+                ])
+          )
+
+      automated_capability_card_page_errors: # Карточка объекта. Закладка "Ошибки".
+        type: markdown
+        template: templates_card/automated_capability_card_page_errors.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )  
+
+      automated_capability_card_page_systems: # Карточка объекта. Закладка "Ошибки".
+        type: markdown
+        template: templates_card/automated_capability_card_page_systems.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      automated_capability_card_page_business_entities: # Карточка объекта. Закладка "Ошибки".
+        type: markdown
+        template: templates_card/automated_capability_card_page_business_entities.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      automated_capability_card_page_bbb_pasport: # Карточка объекта. Закладка "Ошибки".
+        type: markdown
+        template: templates_card/automated_capability_card_page_bbb_pasport.md
+        source: >
+          (          
+            $getBBBCardData($$, $params.id)
+          )
+
+      BBB_errors_extend:
+        type: markdown
+        template: templates/extended_errors.md
+        source: >
+          (
+           $getBBBCardData($$, $params.id) 
+          )
+
+      automated_capability_card_scenarios:
+        type: markdown
+        template: templates/bbb_card_scenarios.md
+        source: >
+          (
+           $BBB_ID:= $params.id;
+           $Scenario_ID := $decodeUrl($params.Scenario_id);
+           $getBBBScenariosData($$,$BBB_ID,$Scenario_ID)
+          )
+
+      automated_capability_card_activity_event_table:
+        type: markdown
+        template: templates/bbb_scenario_activity_event_table.md
+        source: >
+          (
+              $BBB_ID := $params.id;
+              $Scenario_ID := $decodeUrl($params.Scenario_id);
+              $type := $Scenario_type($$, $BBB_ID, $Scenario_ID);
+              $activity_events := $Scenarios_activity_event_table($$, $type);
+              $display_type := $type = "autonomus" ? "Автономный" :
+                               $type = "parent" ? "Родительский" :
+                               $type = "children" ? "Дочерний" :
+                               $type = "parent_children" ? "Дочерний и родительский" :
+                               "";
+              {
+                  "type": $display_type,
+                  "activity_events": $activity_events
+              }
+          )
+
+      automated_capability_card_functions:
+        type: markdown
+        template: templates/bbb_card_functions.md
+        source: >
+          (
+           $getBBBCardData($$, $params.id)
+          )
+      # Представления для встраивания в карточку объекта (таблицы и т.п.).
+      #
+
+      automated_capability_table_API_card:
+        type: table
+        headers:
+          - value: id_API
+            text: Идентификатор API
+            sortable: true
+            align: left
+
+          - value: title_API
+            text: Название
+            sortable: false
+            align: left
+
+          - value: api_type
+            text: Тип интерфейса
+            sortable: true
+            align: left
+
+          - value: description_API
+            text: Описание
+            sortable: false
+            align: left
+
+          - value: business_entity
+            text: Бизнес-сущность
+            sortable: true
+            align: left
+
+          - value: link_API
+            text: Ссылка на описание схемы API/события
+            sortable: false
+            align: left
+            link: link_API
+
+          - value: status
+            text: Статус
+            sortable: true
+            align: left
+
+        origin: datasets.automated_capabilities_list_API
+        source: >
+          (
+            $data1:= $;
+            $obj2:=$filter($data1,function($v){$v.id = $params.id});
+            [$map($obj2,function($v){(
+                {"id":$v.id,
+                "title":$v.title,
+                "link_to_automated_capability":$v.link_to_automated_capability,
+                "id_API":$v.id_API,
+                "title_API":$v.title_API,
+                "api_type":$v.api_type,
+                "business_entity":$v.business_entity,
+                "description_API":$v.description_API,
+                "link_API":$v.link_API,
+                "status":$v.status
+                }
+            )})];
+            )
+
+      automated_capability_table_systems_card:
+        type: table
+        headers:
+          - value: id
+            text: Идентификатор АС
+            sortable: true
+            align: left
+
+          - value: name
+            text: Название АС
+            sortable: false
+            align: left
+
+          - value: full_name
+            text: Полное название АС
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: description
+            text: Описание АС
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: nickname
+            text: Синоним АС
+            sortable: true
+            align: left
+            width: 30%
+
+          - value: system_type
+            text: Тип системы
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: ci_id
+            text: ID АС в service manager
+            sortable: true
+            align: left
+            width: 40%
+
+        source: >
+          (
+            $filteredSystems := automated_capability.$eval($params.id);
+               [$map($filteredSystems.systems, function($v,$i){(
+                  {      
+                    "id": $v,
+                    "name": $lookup($$.automated_system,$v).name, 
+                    "full_name": $lookup($$.automated_system,$v).full_name,
+                    "description": $lookup($$.automated_system,$v).description,
+                    "nickname": $lookup($$.automated_system,$v).nickname,
+                    "system_type": $lookup($$.automated_system,$v).system_type,
+                    "ci_id" : $lookup($$.automated_system,$v).ci_id,
+                    "meta_ref": $lookup($$.automated_system,$v).meta_ref
+                  }
+                  )}
+                  )]
+           )
+
+      automated_capability_table_business_entities_card:
+        type: table
+        headers:
+          - value: id
+            text: Идентификатор бизнес-сущности
+            sortable: true
+            align: left
+
+          - value: summary
+            text: Название
+            sortable: false
+            align: left
+
+          - value: description
+            text: Описание
+            sortable: false
+            align: left
+
+        origin: datasets.automated_capabilities_business_entities
+        source: >
+          (
+            $data1:= $;
+            $obj2:=$filter($data1,function($v){$v.id_bbb = $params.id});
+            [$map($obj2,function($v){(
+                {"id":$v.id,
+                "summary":$v.summary,
+                "description": $v.description
+                }
+            )})];
+            )
+
+      automated_capability_bbb_pasport:
+        type: plantuml
+        template: templates/bbb_pasport.puml
+        source: >
+          (
+            $splitLongStrings := function($value) {
+              $length($value) >= 190 ?
+               (
+                  $partLength:= $ceil($length($value)/ 6);
+                  $join([
+                       $substring($value,0,$partLength),
+                       $substring($value,$partLength,$partLength),
+                       $substring($value,2 * $partLength,$partLength),
+                       $substring($value,3 * $partLength,$partLength),
+                       $substring($value,4 * $partLength,$partLength),
+                       $substring($value,5 * $partLength,$partLength)
+                 ], "\n")
+
+               ) : $value
+            };
+
+            $processObject := function($obj, $color, $index, $level) {
+               $merge($each($obj, function($value, $key) {(
+                   $newKey := $level = 0 ? "<b>" & $key : ($color = "blue" ? "<color:Blue>" & $key : "<color:Green>" & $key);
+                   $newColor := $color = "blue" ? "green" : "blue";
+                   ($type($value) = "string") ? { $newKey: $splitLongStrings($value) } : 
+                   ($type($value) = "object") ? { $newKey: $processObject($value, $newColor, $index, $level + 1) } : 
+                   ($type($value) = "array") ? { $newKey: $map($value, function($item, $itemIndex) {(
+                       $itemColor := ($index + $itemIndex) % 2 = 0 ?  "blue" : "green";
+                       ($type($item) = "string") ? $splitLongStrings($item) : 
+                       ($type($item) = "object") ? $processObject($item, $itemColor, $index + $itemIndex, $level + 1) : 
+                       $item
+                     )}) } : 
+                   { $newKey: $value }
+                 )})
+             )};
+
+              $schema_base := automated_capability.$eval($params.id);
+              $schema_business := automated_capability_business.$eval($params.id);
+          
+              $mergedSchema := $merge([{"<b>"&"Основные атрибуты":$processObject($schema_base, "black", 0,0),"<b>"&"Бизнес-атрибуты":$processObject($schema_business, "black", 0,0)}]);
+                {
+                    "schema": $string($mergedSchema),
+                    "BBB": $params.id
+                }
+            )
+
+      automated_capability_table_Integrations:
+        type: table
+        headers:
+          - value: source
+            text: Источник
+            sortable: true
+            align: left
+            link: link_to_source
+
+          - value: source_business_api
+            text: Бизнес-API BBB источника
+            sortable: false
+            align: left
+
+          - value: source_scenario
+            text: Бизнес-сценарий BBB источника (только для activity_event)
+            sortable: false
+            align: left
+
+          - value: source_activity_type
+            text: Тип activity-события сценария (только для activity_event)
+            sortable: false
+            align: left
+
+          - value: source_scenario_state
+            text: Статус сценария (только для activity_event)
+            sortable: false
+            align: left
+
+          - value: title_integrations
+            text: Название
+            sortable: false
+            align: left
+
+          - value: description_integrations
+            text: Описание
+            sortable: false
+            align: left
+
+          - value: status
+            text: Статус
+            sortable: true
+            align: left
+
+        origin:
+          data: datasets.automated_capabilities_list_Integrations
+          data_1: datasets.automated_capabilities_list_events
+          base: ($)
+        source: >
+          (
+              $data:= data;
+              $data1:= data_1;
+              $obj2:=$filter($data,function($v){$v.id = $params.id});
+              $obj3:= $filter($data1,function($v){$v.id = $params.id});
+             $result:= [$map($obj2,function($v){(
+              {"id":$v.id,
+              "title":$v.title,
+              "link_to_automated_capability":$v.link_to_automated_capability,
+              "link_to_source": ($capability_1:= $lookup(base.automated_capability,$v.source); 
+                $capability_1 ? "/entities/automated_capability/automated_capability_card?id=" & $v.source:""),
+              "source": ($capability_2:= $lookup(base.automated_capability,$v.source); 
+                $capability_2 ? $capability_2.title:$v.source),
+               "source_business_api":$v.source_business_api ? $v.source_business_api  :"-",
+               "source_scenario":$v.source_scenario ? $v.source_scenario  :"-",
+               "source_activity_type":$v.source_activity_type ? $v.source_activity_type  :"-",
+               "source_scenario_state":$v.source_scenario_state ? $v.source_scenario_state  :"-",
+               "title_integrations":$v.title_integrations,
+               "description_integrations":$v.description_integrations,
+               "status":$v.status
+                }
+            )})];
+             $result_2:= [$map($obj3,function($v){(
+               {"id":$v.id,
+               "title":$v.title,
+               "link_to_automated_capability":$v.link_to_automated_capability,
+               "link_to_source": ($capability_1:= $lookup(base.automated_capability,$v.source); 
+                 $capability_1 ? "/entities/automated_capability/automated_capability_card?id=" & $v.source:""),
+               "source": ($capability_2:= $lookup(base.automated_capability,$v.source); 
+                 $capability_2 ? $capability_2.title:$v.source),
+                "source_business_api":$v.source_business_api ? $v.source_business_api  :"-",
+                "source_scenario":$v.source_scenario ? $v.source_scenario  :"-",
+                "source_activity_type":$v.source_activity_type ? $v.source_activity_type  :"-",
+                "source_scenario_state":$v.source_scenario_state ? $v.source_scenario_state  :"-",
+                "title_integrations":$v.title_integrations,
+                "description_integrations":$v.description_integrations,
+                "status":$v.status
+                 }
+             )})];
+            $result_3:= $distinct([$result_2,$result])
+            )
+
+      automated_capability_consumer:
+        type: table
+        headers:
+          - value: title
+            text: BBB_потребитель
+            sortable: true
+            align: left
+            link: link_to_automated_capability
+
+          - value: source_business_api
+            text: Бизнес-API BBB источника
+            sortable: false
+            align: left
+
+          - value: source_scenario
+            text: Бизнес-сценарий BBB источника (только для activity_event)
+            sortable: false
+            align: left
+
+          - value: source_activity_type
+            text: Тип activity-события сценария (только для activity_event)
+            sortable: false
+            align: left
+
+          - value: source_scenario_state
+            text: Статус сценария (только для activity_event)
+            sortable: false
+            align: left
+
+          - value: title_integrations
+            text: Название
+            sortable: false
+            align: left
+
+          - value: description_integrations
+            text: Описание
+            sortable: false
+            align: left
+
+          - value: status
+            text: Статус
+            sortable: true
+            align: left
+
+        origin:
+          data: datasets.automated_capabilities_list_Integrations
+          data_1: datasets.automated_capabilities_list_events
+        source: >
+          (
+                $data1:= data;
+                $data2:= data_1;        
+                $obj2:=$filter($data1,function($v){$v.source = $params.id});
+                $obj3:=$filter($data2,function($v){$v.source = $params.id});
+               $result:=  [$map($obj2,function($v){(
+              {"id":$v.id,
+              "title":$v.title,
+              "link_to_automated_capability":$v.link_to_automated_capability,
+              "source":$v.source,         
+              "source_business_api":$v.source_business_api ? $v.source_business_api  :"-",
+              "source_scenario":$v.source_scenario ? $v.source_scenario  :"-",
+              "source_activity_type":$v.source_activity_type ? $v.source_activity_type  :"-",
+              "source_scenario_state":$v.source_scenario_state ? $v.source_scenario_state  :"-",
+              "title_integrations":$v.title_integrations,
+              "description_integrations":$v.description_integrations,
+              "status":$v.status
+                }
+            )})];
+              $result_2:= [$map($obj3,function($v){(
+                          {"id":$v.id,
+                           "title":$v.title,
+                           "link_to_automated_capability":$v.link_to_automated_capability,
+                           "source":$v.source,         
+                           "source_business_api":$v.source_business_api ? $v.source_business_api  :"-",
+                           "source_scenario":$v.source_scenario ? $v.source_scenario  :"-",
+                           "source_activity_type":$v.source_activity_type ? $v.source_activity_type  :"-",
+                           "source_scenario_state":$v.source_scenario_state ? $v.source_scenario_state  :"-",
+                           "title_integrations":$v.title_integrations,
+                           "description_integrations":$v.description_integrations,
+                           "status":$v.status
+                             }
+                         )})];
+             $result_3:=$distinct([$result_2,$result]);
+            )
+
+      automated_capability_products_BBB_card:
+        type: table
+        headers:
+          - value: title_product
+            text: Продукт ЦКП
+            sortable: true
+            link: link_to_product
+        source: >
+          (
+                        [$$.products_ckp.$spread().(      
+                           $object:= $; 
+                           $ID_PRODUCT := $keys()[0];
+                           $map(*.BBB_used, function($v,$i){(
+                                                  {               
+                                                  "title_product": $object.*.title,                
+                                                  "id_bbb": $v,                
+                                                  "link_to_product": "/entities/products_ckp/product_card?id=" & $ID_PRODUCT
+                                                  }
+                                              )}
+                                              ) 
+                                              ) 
+            [id_bbb=$params.id]]
+          )
+
+      validator_result_table:
+        type: table
+        headers:
+          - value: error_group
+            text: Группа ошибки
+            sortable: true
+          - value: description
+            text: Описание проблемы
+            sortable: true
+            align: left
+          - value: extend
+            sortable: false
+            link: link_to_table
+          - value: correction
+            text: Как исправить
+            sortable: false
+            align: left
+          - value: grace_period
+            text: Грейс_период
+        source: >
+          (      
+             $BBB_checks:= $ALL_validators($$);
+             $Card_Validators($BBB_checks,$params.id)
+          )
+      validator_result_table_base:
+        type: table
+        headers:
+          - value: error_group
+            text: Группа ошибки
+            sortable: true
+          - value: description
+            text: Описание проблемы
+            sortable: true
+            align: left
+          - value: correction
+            text: Как исправить
+            sortable: false
+            align: left
+          - value: grace_period
+            text: Грейс_период
+        source: >
+          (          
+             $gc:= $$;
+             $bbb:= bbb;
+             $BBB_checks:= [$reduce([$validatorBaseCheck($gc,$bbb,"true")],$append)];
+             $Card_Validators($BBB_checks,$params.id);         
+          )
+      plantuml_diagram_scenario_environment:
+        type: plantuml
+        template: templates/plantuml_diagram_scenario_environment.puml
+        source: >
+          ( 
+              $bbid:= $params.id;
+              $scenario_id:= $params.scenario_id;
+              $bbs := $.automated_capability;
+              $BBB_title:= "/entities/automated_capability/automated_capability_card?id=" & $bbid &" {" & $lookup($bbs,$bbid).title & "}";
+              $Scenario_title:= "/entities/automated_capability/automated_capability_card_page_functions?id=" & $bbid &"&Scenario_id="&$scenario_id&" {" & $lookup($bbs,$bbid).scenarios[id=$scenario_id].title & "}";
+              $following:= $Following_scenarios($$,$bbid,$scenario_id) = [] ? "***_ Связи отсутствуют" & "\n**** Последующих сценариев нет":$Following_scenarios($$,$bbid,$scenario_id);
+              $parents:= $Parent_Scenarios($$,$bbid,$scenario_id) = [] ? "***_ Связи отсутствуют" & "\n**** Родительских сценариев нет": "***_ ACTIVITY_INIT.INITIATED \n" & $join($Parent_Scenarios($$,$bbid,$scenario_id),"\n");
+              $children:= $Child_Scenarios($$,$bbid,$scenario_id) = [] ? "***_ Связи отсутствуют" & "\n**** Дочерних сценариев нет": "***_ ACTIVITY_INIT.INITIATED \n" & $join($Child_Scenarios($$,$bbid,$scenario_id),"\n");
+              $previous:= $Previous_scenarios($$,$bbid,$scenario_id) = [] ? "***_ Связи отсутствуют" & "\n**** Предшествующих сценариев нет":$Previous_scenarios($$,$bbid,$scenario_id) ;
+              $integrations_with_current_scenario:= $Integrations_with_current_scenario($$,$bbid,$scenario_id) = [] ?  "***_ Связи отсутствуют" & "\n**** Интеграции с текущим сценарием отсутствуют"  : $Integrations_with_current_scenario($$,$bbid,$scenario_id);
+              $external_integrations:= $Integrations_with_external_scenarios_or_BBB($$,$bbid,$scenario_id) = [] ?  "***_ Связи отсутствуют" & "\n**** Интеграции с внешними сценариями/BBB отсутствуют": $Integrations_with_external_scenarios_or_BBB($$,$bbid,$scenario_id); 
+
+              {"bbid":"[["& $BBB_title &" "& $string($bbid) &"]]","scenario_id":"[["& $Scenario_title &" "& $string($scenario_id) &"]]","Parents":$parents, "Children": $children,"following_scenarios":$join($following,"\n"),"previous_scenarios":$join($previous,"\n"),"integration_with_current": $join($integrations_with_current_scenario,"\n"),"external_integration": $join($external_integrations,"\n")};
+              )
+      scenario_environment_diagramm:
+        type: markdown
+        template: templates/scenario_environment_diagramm.md
+      bbb_metamodel_scenario_viz:
+        type: markdown
+        template: templates/bbb_metamodel_scenario.md
+      bbb_metamodel_scenario_triggers_viz:
+        type: markdown
+        template: templates/bbb_metamodel_scenarios_triggers.md
+      bbb_metamodel_scenario_integrations_viz:
+        type: markdown
+        template: templates/bbb_metamodel_scenarios_integrations.md
+      bbb_metamodel_business_api_viz:
+        type: markdown
+        template: templates/bbb_metamodel_business_api.md
+      bbb_metamodel_responsibles_viz:
+        type: markdown
+        template: templates/bbb_metamodel_responsibles.md

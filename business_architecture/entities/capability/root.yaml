@@ -1,0 +1,4 @@
+# Подключаем определяемые сущности метамодели
+imports:
+  - metadata.yaml
+  - capabilities_table.yaml

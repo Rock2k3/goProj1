@@ -1,0 +1,80 @@
+automated_capability:
+  LOG:
+    title: Логистика
+    owner_block: Химчистка
+    owner_tribe: Отдел логистики
+    description: 'Блок предназначен для автоматизации и оптимизации логистических процессов компании, включая доставку одежды из и до пунктов выдачи заказов (ПВЗ). Он обеспечивает эффективное управление транспортом, маршрутизацией и контролем за выполнением поставок.'
+    status: Эксплуатация
+    responsibles:
+      owner: "6"
+      Methodologist: "6"
+      EAArchitect: "17"
+      solution_architector: "28"
+      development_team:
+        contactInfo:
+          - "LOG_team@ourLoundry.ru"
+        team_members:
+          - "39"
+      support_team:
+        IFT:
+          contactInfo:
+            - "LOG_team@ourLoundry.ru"
+          team_members:
+            - "50"
+        PSI:
+          contactInfo:
+            - "LOG_team@ourLoundry.ru"
+          team_members:
+            - "50"
+        PROM:
+          contactInfo:
+            - "LOG_team@ourLoundry.ru"
+          team_members:
+            - "50"
+    business_functions:
+      DELIVERY:
+        title: Доставка одежды из/до ПВЗ
+        description: 'Функция отвечает за организацию и контроль доставки одежды из и до пунктов выдачи заказов.'
+    business_entities:
+      DELIVERY_REQUEST:
+        summary: Заявка на доставку
+    scenarios:
+      - id: DELIVERY
+        status: Эксплуатация
+        business_function: DELIVERY
+        automated_level: manual
+        children_scenario_allowed: false
+        title: Доставка в/из ПВЗ
+        business_events_produced:
+          - DELIVERY_UPDATE
+        trigger_groups:
+          - group_name: Доставки из ПВЗ
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: APPLICATION_PROCESSING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+          - group_name: Доставка в ПВЗ
+            trigger_items:
+              - type: event
+                event:
+                  source: PPC
+                  source_scenario: ORDER_CLOSING
+                  source_activity_type: ACTIVITY_INIT
+                  source_scenario_state: INITIATED
+    business_api:
+      - id: DELIVERY_UPDATE
+        api_type: business_event
+        business_entity: DELIVERY_REQUEST
+        title: Изменение статуса доставки
+        status: Эксплуатация
+      - id: DELIVERY_DETAIL
+        api_type: getter
+        business_entity: DELIVERY_REQUEST
+        title: Детали текущей доставки
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+    systems:
+      - TS

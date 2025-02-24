@@ -1,0 +1,21 @@
+datasets:
+
+  datasets.automated_capabilities_business_entities:
+    source: >
+      (
+        [$distinct([automated_capability.$spread().(
+          $ac:= $.*;
+          $AUTOMATED_CAPABILITY_ID:= $keys()[0];
+          $business_entity_id:= $.*.business_entities.$keys();
+          $b_e:= $.*.business_entities;     
+          $map($business_entity_id, function($v){{
+          "id_bbb": $AUTOMATED_CAPABILITY_ID,
+          "title_bbb": $ac.title,
+          "id": $v,
+          "summary": $lookup($b_e,$v).summary,
+          "description": $lookup($b_e,$v).description,
+          "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID
+          }})
+
+        )])]      
+            )

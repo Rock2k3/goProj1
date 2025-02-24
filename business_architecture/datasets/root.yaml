@@ -1,0 +1,10 @@
+# Подключаем определяемые сущности метамодели
+imports:
+  - capabilities_list.yaml
+  - automated_capabilities_list.yaml
+  - automated_capabilities_list_API.yaml
+  - automated_capabilities_list_Integrations.yaml
+  - business_functions_list.yaml
+  - automated_capabilities_scenarios.yaml
+  - automated_systems_list.yaml
+  - automated_capability_business_entities.yaml

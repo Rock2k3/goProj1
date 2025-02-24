@@ -1,0 +1,503 @@
+docs:
+  smartants_examples:
+    location: /Документы/01. Тепловые карты BBB/03. Полная диаграмма со связями
+    type: smartants           # Тип документа
+    source: >
+      (
+
+      	$safeString:= $replace(?, /[\.\s-–]/, "_");
+
+       	$bbbRoute:= function($b){(
+
+       		$bbb:=$$.automated_capability.$eval($b);
+
+               $replace($bbb.owner_block, /[\.\s-–]/, "_") & "." & $replace($bbb.owner_tribe, /[\.\s-–]/, "_") & "." & $b /* подставил $replace вместо $safeString из-за запористой баги*/
+
+       	)};
+
+        $blockNodes:=[$distinct([automated_capability.$spread().(
+
+              $.*.{
+              $safeString(owner_block):{ 
+              "title": "Блок " & owner_block,
+              "background": "gray85",
+              "opacity":0.3}
+              }
+
+          )])];
+
+      	$tribeNodes:=[$distinct([automated_capability.$spread().(
+
+              $.*.{
+              $safeString(owner_block) & "." & $safeString(owner_tribe):{ 
+              "title": "Трайб " & owner_tribe,
+              "background": "gray95",
+            "opacity":0.3}
+              }
+
+          )])];
+
+      	$bbbNodes:=[$distinct([automated_capability.$spread().(
+
+      		$AUTOMATED_CAPABILITY_ID := $keys()[0];
+
+              $.*.{
+              $bbbRoute($AUTOMATED_CAPABILITY_ID):{ 
+              "title": " ",
+              "symbol": $AUTOMATED_CAPABILITY_ID}
+              }
+
+          )])];
+      
+        $svgSymbols:=[$distinct([automated_capability.$spread().(
+
+                      		$AUTOMATED_CAPABILITY_ID := $keys()[0];
+
+                            {
+                              $AUTOMATED_CAPABILITY_ID: $bbbSVG($$, $AUTOMATED_CAPABILITY_ID)
+                            }
+
+                                )])];
+              $getLinksFromIntegrations := function($v, $k) {
+                      $map($v.scenarios, function($inner) {
+                          $map($filter($inner.integrations_used, function($v,$i,$a){$v.source in automated_capability.$keys()}),
+                        function($vv) {
+                          {
+                              "from": $bbbRoute($k),
+                              "to": $bbbRoute($vv.source),
+                              "style": "->"
+                          }
+                      })
+                   })
+                  };
+
+                  $getLinksFromTriggerItems := function($v, $k) {
+                      $map($v.scenarios, function($inner) {
+                       $map($filter($inner.trigger_groups.trigger_items,function($v,$i,$a){$v.*.source in automated_capability.$keys()}),
+                             function($vv){
+                              {
+                                  "from": $bbbRoute($k),
+                                  "to": $bbbRoute($vv.*.source),
+                                  "style": "->"
+                              }
+                      })
+                    })
+                  };
+                  
+                   $flatten := function($arr) {
+                       $reduce($arr, function($acc, $val) {
+                           $type($val) = "array" ? $append($acc, $flatten($val)) : $append($acc, $val)
+                       }, [])
+                   };
+            
+
+                $links := $flatten($reduce([
+                        $each(automated_capability, $getLinksFromIntegrations),
+                        $each(automated_capability, $getLinksFromTriggerItems)
+                    ], $append));
+
+            	{
+            	  "header":{
+                     		"title":"Карта Business Building Blocks", 
+                     		"style":{ 
+                     		  "color": "#fbaaaa",
+                     		  "font-size": "22px",
+                     		  "font-weight": 800}},
+                 "config":{ 
+                   "distance": 50, 
+                   "trackWidth": 20},
+            	  "nodes":$merge($append($append($blockNodes,$tribeNodes),$bbbNodes)),
+                "symbols": $merge($svgSymbols),
+                "links": $distinct($links)
+            	}
+            
+      )
+
+  BBB_Map:
+    location: ""
+    type: smartants           # Тип документа
+    source: >
+      (    
+         $BBB_checks:= $ALL_validators($$);
+
+         $BBB_used_in_prod:= $params.id ?  automated_capability.$spread()[$keys() in [$lookup($$.products_ckp,$params.id).BBB_used]]: automated_capability.$spread();
+
+         $Map_Goal:= $params.Map_Goal;
+
+         $safeString:= $replace(?, /[\.\s-–]/, "_");
+
+         $bbbRoute:= function($b){(
+
+         $bbb:=$$.automated_capability.$eval($b);
+
+         $safeString($bbb.owner_block) & "." & $safeString($bbb.owner_tribe) & "." & $b
+
+         )};
+
+        $blockNodes:=[$distinct([$BBB_used_in_prod.(
+
+           $.*.{
+           $safeString(owner_block):{ 
+            "title": "Блок " & owner_block}
+            }
+
+           )])];
+
+           $tribeNodes:=[$distinct([$BBB_used_in_prod.(
+
+            $.*.{
+            $safeString(owner_block) & "." & $safeString(owner_tribe):{ 
+             "title": "Трайб " & owner_tribe}
+            }
+
+            )])];
+
+            $bbbNodes:=[$distinct([$BBB_used_in_prod.(
+
+            $AUTOMATED_CAPABILITY_ID := $keys()[0];
+
+            $.*.{
+            $bbbRoute($AUTOMATED_CAPABILITY_ID):{ 
+            "title": " ",
+            "symbol": $AUTOMATED_CAPABILITY_ID}
+            }
+
+            )])];
+
+            $svgSymbols:=[$distinct([automated_capability.$spread().(
+
+            $AUTOMATED_CAPABILITY_ID := $keys()[0];
+
+            {
+            $AUTOMATED_CAPABILITY_ID:  $Map_Goal = "status" ? $bbbSVG($$, $AUTOMATED_CAPABILITY_ID, $bbbColorByStatus($$, $AUTOMATED_CAPABILITY_ID)): $bbbSVG($$, $AUTOMATED_CAPABILITY_ID, $bbbColorByError($$, $BBB_checks, $AUTOMATED_CAPABILITY_ID))
+            }
+
+                  )])];
+      {
+        "header":{
+                   "title":"Карта Business Building Blocks", 
+                   "style":{ 
+                      "color": "#fbaaaa",
+                      "font-size": "22px",
+                      "font-weight": 800}},
+                "config":{ 
+                   "distance": 20, 
+                   "trackWidth": 24},
+        "nodes":$merge($append($append($blockNodes,$tribeNodes),$bbbNodes)),
+        "symbols": $merge($svgSymbols),
+        "links":[]
+          }
+      )
+  BBB_Legend_Errors:
+    location: ""
+    type: smartants           # Тип документа
+    source: >
+      (
+           (     
+        $svgNodes_add := [
+            {
+            "BBB1":{
+              "title":"BBB без ошибок",
+              "symbol":"test"},
+            "BBB2":{     
+              "title":"BBB с ошибками на время грейс-периода",
+              "symbol": "test1"},
+            "BBB3":{      
+              "title":"BBB без ошибок в статусе Планирование",
+              "symbol": "test2"},
+            "BBB4":{      
+              "title":"BBB с ошибками вне грейс-периода",
+              "symbol": "test3"}
+            }
+            ];
+      
+        $svgSymbols := [$distinct([$$.svgIcons.$spread().(
+
+            $SVG_ID := $keys()[0];
+
+            {
+            $SVG_ID: $$.svgIcons.$eval($SVG_ID)
+            }
+
+            )])];
+      
+        $svgSymbols_add := [
+            {
+            "test":$bbbSVG($$, "","lightgreen",0.51),
+            "test1":$bbbSVG($$, "","yellow",0.51),
+            "test2":$bbbSVG($$, "","gray",0.51),
+            "test3":$bbbSVG($$, "","tomato",0.51)
+            }
+         ];
+
+        {
+          "header":{
+                    "title":"Легенда карты BBB (ошибки)", 
+                    "style":{ 
+                      "color": "#fbaaaa",
+                      "font-size": "15px",
+                      "font-weight": 800}},      
+                  "config":     
+                          { 
+                    "distance": 20, 
+                    "trackWidth": 24},
+          "nodes": $merge($svgNodes_add),
+          "symbols": $merge($svgSymbols_add),
+          "links": [] 
+        }      
+      )      
+      )
+  Environment_Diagramm_Legend:     # Легенда диаграммы окружения BBB
+    location: ""
+    type: smartants           # Тип документа
+    source: >
+      (
+           (     
+        $svgNodes_add := [
+            {
+            "BBB1":{
+               "title":"Статус BBB Эксплуатация",
+               "tag":"column3",
+               "symbol":"test"},    
+            "BBB2":{     
+               "title":"Статус BBB Проектирование или Разработка",
+               "tag": "column4",
+               "symbol": "test1"},
+            "BBB3":{      
+               "title":"Статус BBB Планирование",
+               "tag": "column5",
+               "symbol": "test2"},
+            "BBB4":{      
+               "title":"Статус BBB Выведение или Выведен",
+               "tag": "column6",
+               "symbol": "test3"},
+            "BBB5":{      
+                "hideTitle":"true",
+                "tag": "column1",
+                "symbol": "test4"},
+            "BBB6":{      
+                "hideTitle":"true",
+                "tag": "column2",
+                "symbol": "test5"}
+            }
+            ];
+
+        $svgSymbols := [$distinct([$$.svgIcons.$spread().(
+
+            $SVG_ID := $keys()[0];
+
+            {
+            $SVG_ID: $$.svgIcons.$eval($SVG_ID)
+            }
+      
+            )])];
+
+        $svgSymbols_add := [
+            {
+            "test":$bbbSVG($$,"","lightgreen",0.4),
+            "test1":$bbbSVG($$,"","yellow",0.4),
+            "test2":$bbbSVG($$,"","gray",0.4),
+            "test3":$bbbSVG($$, "","tomato",0.4),
+            "test4":$bbbSVG($$, "","white",0.01),
+            "test5":$bbbSVG($$, "","white",0.01)
+            }
+         ];
+        {
+          "header":{
+                    "title":"Легенда диаграммы окружения BBB", 
+                    "style":{ 
+                      "color": "#fbaaaa",
+                      "font-size": "15px",
+                      "font-weight": 800}},      
+                  "config":     
+                          { 
+                    "distance": 20, 
+                    "trackWidth":10,      
+                    "grid":[   
+                       {"row":
+                       [{"col":"column1"}, 
+                       {"col":"column2"},
+                       {"col":"column3"},
+                       {"col":"column4"},
+                       {"col":"column5"},
+                       {"col":"column6"}]}
+                        ]
+                     },
+          "nodes": $merge($svgNodes_add),
+          "symbols": $merge($svgSymbols_add),
+          "links":[{
+                  "from":  "BBB5",
+                  "to": "BBB6",
+                  "style":"-->",
+                  "title": "Пользование / Потребление"
+                }
+                ]    
+        }      
+      )      
+      )
+  Environment_Diagramm:    # диаграмма окружения BBB
+    location: ""
+    type: smartants           # Тип документа
+    source: >
+      (      
+           $BBB_consumer:= automated_capability.$spread()[$params.id in *.scenarios.integrations_used.source];
+
+           $BBB_consumer_2:= automated_capability.$spread()[$params.id in *.scenarios.trigger_groups.trigger_items.*.source];
+
+           $BBB_integration:= automated_capability.$spread()[$keys() in $lookup($$.automated_capability,$params.id).scenarios.integrations_used.source];
+
+           $BBB_integration_2:= automated_capability.$spread()[$keys() in $lookup($$.automated_capability,$params.id).scenarios.trigger_groups.trigger_items.*.source];
+
+           $BBB_consumer_combined := $append($BBB_consumer, $BBB_consumer_2);
+
+           $BBB_integration_combined := $append($BBB_integration, $BBB_integration_2);
+
+           $BBB_current:= {$params.id:$lookup($$.automated_capability,$params.id)};
+
+           $BBB_all:= $distinct($append($BBB_consumer_combined,$append($BBB_integration_combined,$BBB_current)));
+
+           $safeString:= $replace(?, /[\.\s-–]/, "_");
+
+           $bbbRoute:= function($b){(
+
+           $bbb:=$$.automated_capability.$eval($b);
+
+           $safeString($b)
+
+           )};
+             $Smartants_keys:= [$BBB_all.$keys()[$ != $BBB_current.$keys()[0]]];  
+             $Smartants_keys_divide := $round($count($Smartants_keys) / 2);
+             $Smartants_keys_up:= $Smartants_keys[[0..$Smartants_keys_divide-1]];
+             $Smartants_keys_down:= $Smartants_keys[[$Smartants_keys_divide..$count($Smartants_keys)-1]];
+              $bbbNodes:=[$BBB_all.(      
+              $AUTOMATED_CAPABILITY_ID := $keys()[0];      
+              $.*.{
+              $bbbRoute($AUTOMATED_CAPABILITY_ID):{ 
+              "hideTitle": "true",
+              "tag": $AUTOMATED_CAPABILITY_ID in $Smartants_keys_up ? $AUTOMATED_CAPABILITY_ID :($AUTOMATED_CAPABILITY_ID in $Smartants_keys_down? $AUTOMATED_CAPABILITY_ID:$BBB_current.$keys()[0]), 
+              "AC_id": $AUTOMATED_CAPABILITY_ID,
+              "symbol": $AUTOMATED_CAPABILITY_ID}
+              }      
+              )];
+
+              $svgSymbols:=[$distinct([automated_capability.$spread().(
+
+              $AUTOMATED_CAPABILITY_ID := $keys()[0];
+
+              {
+              $AUTOMATED_CAPABILITY_ID: $AUTOMATED_CAPABILITY_ID in $BBB_current.$keys() ? $bbbSVG($$, $AUTOMATED_CAPABILITY_ID, $bbbColorByStatus($$, $AUTOMATED_CAPABILITY_ID),1.5):
+                                         $bbbSVG($$, $AUTOMATED_CAPABILITY_ID, $bbbColorByStatus($$, $AUTOMATED_CAPABILITY_ID))}
+
+              )])]; 
+              $current_block_id:= $bbbNodes[*.AC_id = $params.id].$keys();
+              $links:= $distinct($append(
+                 $BBB_integration_combined.$spread()@$k.{
+                      "from": $current_block_id,
+                       "to"  : $bbbNodes[*.AC_id = $k.$keys()].$keys(),
+                      "style":"->"
+                 },
+                 $BBB_consumer_combined.$spread()@$k.{
+                      "to": $current_block_id,
+                      "from"  : $bbbNodes[*.AC_id = $k.$keys()].$keys(),
+                     "style":"->"
+                 }
+               ));      
+           {
+             "header":{
+               "title":"Карта окружения Business Building Blocks", 
+               "style":{ 
+                  "color": "#fbaaaa",
+                  "font-size": "22px",
+                  "font-weight": 800}},
+              "config":{      
+               "distance": 120, 
+               "trackWidth": 35,
+                "grid":[
+                      {
+                        "row": $zip($Smartants_keys_up)
+                      },
+                      {
+                        "row": [
+                          {"col":$BBB_current.$keys()}
+                         ]
+                      }, 
+                      {
+                        "row":$zip($Smartants_keys_down)
+                      }
+                    ]
+                  },  
+             "nodes":$merge($bbbNodes),
+             "symbols": $merge($svgSymbols),
+             "links": ([$links])      
+            }
+         )
+  BBB_Legend_Status:   # легенда для карты BBB (статусы)
+    location: ""
+    type: smartants           # Тип документа
+    source: >
+      (
+           (     
+        $svgNodes_add := [
+            {
+            "BBB1":{
+               "title":"Статус BBB Эксплуатация",
+               "tag":"column1",
+               "symbol":"test"},    
+            "BBB2":{     
+               "title":"Статус BBB Проектирование или Разработка",
+               "tag": "column2",
+               "symbol": "test1"},
+            "BBB3":{      
+               "title":"Статус BBB Планирование",
+               "tag": "column3",
+               "symbol": "test2"},
+            "BBB4":{      
+               "title":"Статус BBB Выведение или Выведен",
+               "tag": "column4",
+               "symbol": "test3"}  
+            }
+            ];
+
+        $svgSymbols := [$distinct([$$.svgIcons.$spread().(
+
+            $SVG_ID := $keys()[0];
+
+            {
+            $SVG_ID: $$.svgIcons.$eval($SVG_ID)
+            }
+
+            )])];
+
+        $svgSymbols_add := [
+            {
+            "test":$bbbSVG($$,"","lightgreen",0.4),
+            "test1":$bbbSVG($$,"","yellow",0.4),
+            "test2":$bbbSVG($$,"","gray",0.4),
+            "test3":$bbbSVG($$, "","tomato",0.4)
+            }
+         ];
+        {
+          "header":{
+                    "title":"Легенда карты BBB (статусы)", 
+                    "style":{ 
+                      "color": "#fbaaaa",
+                      "font-size": "15px",
+                      "font-weight": 800}},      
+                  "config":     
+                          { 
+                    "distance": 20, 
+                    "trackWidth":10,      
+                    "grid":[   
+                       {"row":
+                       [{"col":"column1"}, 
+                       {"col":"column2"},
+                       {"col":"column3"},
+                       {"col":"column4"}]}
+                        ]
+                     },
+          "nodes": $merge($svgNodes_add),
+          "symbols": $merge($svgSymbols_add),
+          "links":[]    
+        }      
+      )      
+      )

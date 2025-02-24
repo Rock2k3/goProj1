@@ -1,0 +1,17 @@
+@startuml
+<style>
+json {
+  MaximumWidth 250
+  BackGroundColor ivory
+  FontName Arial
+}
+</style>
+legend top left
+    <b>Легенда диаграммы метамодели BBB</b>
+    - <:2705:>  Обязательность поля в метамодели BBB
+    - <b>"$ref": "#/$rels/.."</b>  Ссылка на определенный справочник
+end legend
+json Ответственные {{&bbb_metamodel}}
+
+
+@enduml

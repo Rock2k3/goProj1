@@ -1,0 +1,13 @@
+# Подключаем определяемые сущности метамодели
+imports:
+  - metadata_main.yaml
+  - metadata_objects.yaml
+  - metadata_presentations.yaml
+  - metadata_presentations_card.yaml
+  - metadata_schema_add_schema_header_1.yaml
+  - metadata_schema_add_schema_interface_type.yaml
+  - metadata_schema_defs.yaml
+  - metadata_schema_properties.yaml
+  - automated_capabilities_table.yaml
+  - metadata_schema_business_properties.yaml
+  - activity_event_table.yaml

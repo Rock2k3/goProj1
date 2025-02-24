@@ -1,0 +1,79 @@
+docs:
+  bbb_goal_report:
+    type: table
+    headers:
+      - value: owner_block
+        text: Блок
+        sortable: true
+      - value: owner_tribe
+        text: Трайб
+        sortable: true
+      - value: bbbCount
+        text: Количество BBB
+        sortable: true
+      - value: bbbErrors
+        text: Количество BBB с ошибками (вне грейс-периода)
+        sortable: true
+      - value: bbbErrorsGrace
+        text: Количество BBB с ошибками (только в грейс-периоде)
+        sortable: true
+      - value: correctBBBPercent
+        text: Корректных BBB, % (с учетом грейс-периода)
+        sortable: true
+      - value: correctBBBPercentGrace
+        text: Корректных BBB, % (без учета грейс-периода)
+        sortable: true
+    source: >
+      (       
+        $valid_result:=[$reduce([$validatorIntegrations($$),$validatorAPI($$),$validatorHeader1($$),$validatorHeader2($$)],$append)];
+        $bbbValidationResult:= $$.automated_capability.$spread().( 
+                 $object:= $; 
+                 $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                 $all_errors:= $valid_result[id=$AUTOMATED_CAPABILITY_ID];
+                 $all_errors:= $type($all_errors)="array" ? $all_errors : [$all_errors];
+                 $current_errors_in_gr:= $filter($all_errors.grace_period,function($v,$i,$a){$v > $now()});
+                 $grace_p_in:= $count($current_errors_in_gr) >= 1 ?  $count($current_errors_in_gr): 0;
+                 $grace_p_out:= $count($all_errors)-$count($current_errors_in_gr) >=1 ? $count($all_errors)-$count($current_errors_in_gr): 0;
+                {                                                                      
+                 "id": $AUTOMATED_CAPABILITY_ID,
+                 "title": $object.*.title,
+                 "owner_block": $object.*.owner_block,
+                 "owner_tribe": $object.*.owner_tribe,
+                 "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID,
+                 "Errors_out_of_grace_p": $grace_p_out, 
+                 "Errors_in_grace_p": $grace_p_in,
+                 "bbbCount": 1,
+                 "bbbErrors": $grace_p_out > 0 ? 1 : 0,
+                 "bbbErrorsGrace": $grace_p_out = 0 and $grace_p_in > 0 ? 1 : 0
+                }
+          );
+  
+        $tribeValidation:=$bbbValidationResult {owner_tribe:
+             {
+                 "bbbCount": $sum(bbbCount),
+                 "bbbErrors": $sum(bbbErrors),
+                 "bbbErrorsGrace": $sum(bbbErrorsGrace)
+  
+             }
+         };
+  
+         $distinct($bbbValidationResult.(
+  
+             $bbbCount:=$lookup($tribeValidation, owner_tribe).bbbCount;
+             $bbbErrors:=$lookup($tribeValidation, owner_tribe).bbbErrors;
+             $bbbErrorsGrace:=$lookup($tribeValidation, owner_tribe).bbbErrorsGrace;
+             $bbbPercent:= $bbbCount / 100;
+  
+             {
+                 "owner_block": owner_block,
+                 "owner_tribe": owner_tribe,
+                 "bbbCount": $bbbCount,
+                 "bbbErrors": $bbbErrors,
+                 "bbbErrorsGrace": $bbbErrorsGrace,
+                 "correctBBBPercent": $round(($bbbCount-$bbbErrors) / $bbbPercent,0),
+                 "correctBBBPercentGrace": $round(($bbbCount-$bbbErrors-$bbbErrorsGrace)/$bbbPercent,0) 
+             }
+  
+             )
+         )      
+      )

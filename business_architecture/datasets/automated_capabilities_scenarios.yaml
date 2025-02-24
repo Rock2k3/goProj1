@@ -1,0 +1,31 @@
+datasets:
+  # Получаем список аФБС с линками на карточку аФБС
+  datasets.automated_capabilities_scenarios:
+    source: >
+      (
+                      $REPO := $;
+                      [$distinct([automated_capability.$spread().(
+                          $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                          $scenarios:= $.*.scenarios;
+                          $bf:= $.*.business_functions;
+                          $businessScenarios:= $lookup($$.automated_capability_business, $AUTOMATED_CAPABILITY_ID).*;
+                          $scenarios.(
+                           $scenarioID:= id;
+                               {
+                              "bbb_id": $AUTOMATED_CAPABILITY_ID,
+                              "bbb_title": $string($lookup($$.automated_capability, $AUTOMATED_CAPABILITY_ID).title),
+                              "f_id": $string(business_function),
+                              "f_title": $lookup($bf,business_function).title, 
+                              "s_id": $string(id),
+                              "s_title": $string(title),
+                              "s_description": $string(description), 
+                              "s_planned_date": $filter($businessScenarios,function($bScenario){$bScenario.id = $scenarioID}).planned_date[0],
+                              "s_status": status,
+                              "s_automated_level": automated_level,
+                              "s_children_scenario_allowed": $exists(children_scenario_allowed) = false ? "": children_scenario_allowed = true ? "Да" : "Нет",
+                              "s_sla": $filter($businessScenarios,function($bScenario){$bScenario.id = $scenarioID}).sla[0],
+                              "link_to_bbb": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID
+                              } 
+                              )
+                      )])^(id)]
+                  )

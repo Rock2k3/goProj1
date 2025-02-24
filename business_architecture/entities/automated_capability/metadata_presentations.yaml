@@ -1,0 +1,909 @@
+# Описываем метаданные аФБС/BBB
+# Документация - https://dochub.info/docs/dochub.entities
+entities:
+  # Идентификатор сущности
+  automated_capability:
+    # Создаем представления
+    presentations:
+
+      automated_capability_table_list:
+      # Список всех BBB
+        type: table
+        headers:
+          - value: title
+            text: BBB
+            sortable: true
+            align: left
+            link: link_to_automated_capability
+
+          - value: id
+            text: ID в DocHub
+            sortable: true
+            align: left
+            width: 10%
+
+          - value: description
+            text: Описание
+            sortable: false
+            align: left
+
+          - value: owner_block
+            text: Блок
+            sortable: false
+            align: left
+
+          - value: owner_tribe
+            text: Трайб
+            sortable: false
+            align: left
+
+        origin:
+          data: datasets.automated_capabilities_list
+          base: ($)
+        source: >
+          (          
+            $data1:= data;
+            [$map($data1,function($v){(
+                          {"id":$v.id,
+                          "title":$v.title,
+                          "description":$v.description,
+                          "owner_block":$v.owner_block,
+                          "owner_tribe":$v.owner_tribe,          
+                          "EEArchitect": $map(base.automated_capability.$eval($v.id).responsibles.EAArchitect,function($v){($EEA:= $join($lookup(base.employee_data,$string($v)).FIO))}),
+                          "link_to_automated_capability":$v.link_to_automated_capability          
+                          }
+                        )})];         
+          )
+
+      automated_capability_list:
+      # Вывод таблицы automated_capability_table_list в markdown документ
+        type: markdown
+        template: templates/automated_capabilities_table.md
+
+      bbb_metamodel_scenario_environment:
+        type: markdown
+        template: templates/bbb_scenario_environment.md
+
+      automated_capability_table_API:
+      # Список всех Интерфейсов всех BBB
+        type: table
+        headers:
+          - value: title
+            text: BBB
+            sortable: true
+            align: left
+            link: link_to_automated_capability
+
+          - value: id
+            text: BBB ID
+            sortable: true
+            align: left
+
+          - value: id_API
+            text: Идентификатор API
+            sortable: true
+            align: left
+
+          - value: title_API
+            text: Название
+            sortable: false
+            align: left
+
+          - value: api_type
+            text: Тип интерфейса
+            sortable: true
+            align: left
+
+          - value: description_API
+            text: Описание
+            sortable: false
+            align: left
+
+          - value: business_entity
+            text: Бизнес-сущность
+            sortable: true
+            align: left
+
+          - value: link_API
+            text: Ссылка на описание схемы API/события
+            sortable: true
+            align: left
+            link: link_API
+
+          - value: status
+            text: Статус
+            sortable: true
+            align: left
+
+        source: datasets.automated_capabilities_list_API
+
+      automated_capability_list_API:
+        # Вывод таблицы automated_capability_table_API в markdown документ
+        type: markdown
+        template: templates/automated_capabilities_table_API.md
+
+      automated_capability_scenarios:
+        # Список всех сценариев всех BBB
+        type: table
+        headers:
+          - value: bbb_id
+            text: Код BBB
+            sortable: true
+            align: left
+            link: link_to_bbb
+
+          - value: bbb_title
+            text: BBB
+            sortable: true
+            align: left
+
+          - value: s_id
+            text: Код сценария
+            sortable: true
+            align: left
+
+          - value: s_title
+            text: Название сценария
+            sortable: true
+            align: left
+
+          - value: s_description
+            text: Подробное описание сценария
+            sortable: true
+            align: left
+
+          - value: s_status
+            text: Статус сценария
+            sortable: true
+            align: left
+
+          - value: s_planned_date
+            text: Плановая дата ввода сценария
+            sortable: true
+            align: left
+
+          - value: s_automated_level
+            text: Уровень автоматизации сценария
+            sortable: true
+            align: left
+
+          - value: s_children_scenario_allowed
+            text: Разрешены дочерние сценарии
+            sortable: true
+            align: left
+
+          - value: s_sla
+            text: SLA сценария (минуты)
+            sortable: true
+            align: left
+
+          - value: f_id
+            text: Код бизнес-функции
+            sortable: true
+            align: left
+
+          - value: f_title
+            text: Название бизнес-функции
+            sortable: true
+            align: left
+
+
+        source: datasets.automated_capabilities_scenarios
+
+      automated_capability_scenarios_table:
+        type: markdown
+        template: templates/automated_capability_scenarios.md
+
+      automated_capability_table_business_entities:
+        # Список всех бизнес-сущностей всех BBB
+        type: table
+        headers:
+          - value: title_bbb
+            text: BBB
+            sortable: true
+            align: left
+            link: link_to_automated_capability
+
+          - value: id_bbb
+            text: BBB ID
+            sortable: true
+            align: left
+
+          - value: id
+            text: Идентификатор бизнес-сущности
+            sortable: true
+            align: left
+
+          - value: summary
+            text: Название
+            sortable: true
+            align: left
+
+          - value: description
+            text: Тип интерфейса
+            sortable: true
+            align: left
+
+        source: datasets.automated_capabilities_business_entities
+
+      business_entities_table:
+        type: markdown
+        template: templates/business_entities_table.md
+
+      automated_capability_errors:
+        # Сводный отчет по ошибкам всех BBB
+        type: table
+        headers:
+          - value: title
+            text: BBB
+            sortable: true
+            link: link_to_automated_capability
+          - value: id
+            text: Код BBB
+            sortable: true
+          - value: owner_block
+            text: Блок
+            sortable: true
+          - value: owner_tribe
+            text: Трайб
+            sortable: true
+          - value: Errors_out_of_grace_p
+            text: Ошибки вне грейс-периода
+            sortable: true
+          - value: Errors_in_grace_p
+            text: Ошибки в грейс-периоде
+            sortable: true
+        source: >
+          (
+           $valid_result:=[$reduce([$validatorBaseCheck($$),$validator_BBB_ID_Business($$),$validator_Unique_Id_Scenario($$),$validatorScenariosIdBusiness($$),$validatorIntegrations($$),$validatorAPI($$),$validatorHeader1($$),$validatorHeader2($$),$validatorScenarios($$),$validatorScenariosBusiness($$)],$append)];
+           $$.automated_capability.$spread().( 
+                    $object:= $; 
+                    $AUTOMATED_CAPABILITY_ID := $keys()[0];
+                    $all_errors:= $valid_result[id=$AUTOMATED_CAPABILITY_ID];
+                    $all_errors:= $type($all_errors)="array" ? $all_errors : [$all_errors];
+                    $current_errors_in_gr:= $filter($all_errors.grace_period,function($v,$i,$a){$v > $now()});
+                    $grace_p_in:= $count($current_errors_in_gr) >= 1 ?  $count($current_errors_in_gr): "0";
+                    $grace_p_out:= $count($all_errors)-$count($current_errors_in_gr) >=1 ? $count($all_errors)-$count($current_errors_in_gr): "0";
+                   {                                                                      
+                    "id": $AUTOMATED_CAPABILITY_ID,
+                    "title": $object.*.title,
+                    "owner_block": $object.*.owner_block,
+                    "owner_tribe": $object.*.owner_tribe,
+                    "link_to_automated_capability": "/entities/automated_capability/automated_capability_card?id=" & $AUTOMATED_CAPABILITY_ID,
+                    "Errors_out_of_grace_p": $grace_p_out, 
+                    "Errors_in_grace_p": $grace_p_in
+                   }
+             )
+          )
+
+      business_functions_table_list:
+        type: table
+        headers:
+          - value: id_bbb
+            text: Код BBB
+            sortable: true
+            align: left
+            width: 10%
+            link: link_to_automated_capability
+
+          - value: title
+            text: Название BBB
+            sortable: true
+            align: left
+            width: 10%
+
+          - value: id
+            text: Код бизнес-функции
+            sortable: true
+            align: left
+            width: 10%
+
+          - value: title
+            text: Заголовок
+            sortable: true
+            align: left
+            width: 40%
+
+          - value: description
+            text: Описание
+            sortable: true
+            align: left
+            width: 40%
+        source: datasets.business_functions_list
+
+      business_functions_table_card:
+        type: markdown
+        template: templates/business_functions_table.md
+
+      BBB_errors:
+        # Вывод таблицы automated_capability_errors в markdown документ
+        type: markdown
+        template: templates/automated_capabilities_errors.md
+
+      BBB_Map_Errors:
+        type: markdown
+        template: templates/BBB_Map_Errors.md
+        source: >
+          (
+          {"Map_Goal":"errors"}
+          )
+
+      BBB_Map_Status:
+        type: markdown
+        template: templates/BBB_Map_Status.md
+        source: >
+          (
+          {"Map_Goal":"status"}
+          )
+      BBB_AsyncAPI_presentation:
+        # Вывод описания событий BBB
+        type: upload
+        title: Выгрузка AsyncAPI 3.0 спецификации BBB
+        origin:
+          B3Event: datasets.specifications.b3event
+          MonitoringEvent: datasets.specifications.monitoringevent
+          JournalEvent: datasets.specifications.journalevent
+          base: ($)
+        params: # JSONSchema контроля параметров
+          type: object
+          properties:
+            id:
+              type: string
+          required:
+            - id
+        source: >
+          (
+              $specs_B3Event := B3Event ~> | $ | {}, "definitions" | ;
+              $specs_MonitoringEvent := MonitoringEvent ~> | $ | {}, "definitions" |;
+              $specs_JournalEvent := JournalEvent;
+
+              $specs_definitions_B3Event := B3Event.definitions;
+              $specs_definitions_MonitoringEvent := MonitoringEvent.definitions;
+
+              $result := $getBBBAsyncAPIData_3_0(base, $params.id);
+
+              $replace_path_Refs_B3Event_Cleared := function($node) {
+                                      $merge($each($node, function($value, $key) {(
+                                            $result := (
+                                                $key = "$ref" and $value = "#/definitions/Header_Type" ? 
+                                                    {"$ref": "#/components/schemas/Business_Header_Type"} :
+                                                ($key = "$ref" and $value = "#/definitions/Body_Type" ? 
+                                                    {"$ref": "#/components/schemas/Business_Body_Type"} :
+                                                ($type($value) = "object" ? 
+                                                    {$key: $replace_path_Refs_B3Event_Cleared($value)} : 
+                                                    {$key: $value}
+                                                ))
+                                            );
+                                            $result;
+                                        )}))
+                                  };
+
+              $replace_path_Refs_B3Event := function($node) {
+                                $merge($each($node, function($value, $key) {(
+                                      $result := (          
+                                          ($key = "$ref" and $value = "#/definitions/EventObject_Type" ? 
+                                              {"$ref": "#/components/schemas/EventObject_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/ParentProcess_Type" ? 
+                                              {"$ref": "#/components/schemas/ParentProcess_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Service_Type" ? 
+                                              {"$ref": "#/components/schemas/Service_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/SubTypeEvent_Type" ? 
+                                              {"$ref": "#/components/schemas/SubTypeEvent_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Expertise_Type" ? 
+                                              {"$ref": "#/components/schemas/Expertise_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Object_Type" ? 
+                                              {"$ref": "#/components/schemas/Object_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Message_Type" ? 
+                                              {"$ref": "#/components/schemas/Message_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/AddSourceId_Type" ? 
+                                              {"$ref": "#/components/schemas/AddSourceId_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Scenario_ID_Type" and $node.description != "Код бизнес-сценария, запущенного в BBB, в рамках определенного типа процесса"  ? 
+                                              {"$ref": "#/components/schemas/Scenario_ID_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/BBB_ID_Type" and $node.description != "Код BBB-источника события" ? 
+                                              {"$ref": "#/components/schemas/BBB_ID_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Task_Type" ? 
+                                              {"$ref": "#/components/schemas/Task_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/SLAState_Type" ? 
+                                              {"$ref": "#/components/schemas/SLAState_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/Employee_Type" ? 
+                                              {"$ref": "#/components/schemas/Employee_Type"} :
+                                          ($key = "$ref" and $value = "#/definitions/SLA_Type" ? 
+                                              {"$ref": "#/components/schemas/SLA_Type"} :
+
+                                          ($type($value) = "object" ? 
+                                              {$key: $replace_path_Refs_B3Event($value)} : 
+                                              {$key: $value}
+                                          )))))))))))))))
+                                      );
+                                      $result;
+                                  )}))
+                            };
+              $replace_B3Event_Body_Header := function($node) {
+                                              $merge($each($node, function($value, $key) {(
+                                                    $result := (          
+                                                        $key = "Header_Type"  ? 
+                                              {"Business_Header_Type":$value} :
+                                          $key = "Body_Type"  ? 
+                                              {"Business_Body_Type":$value} :
+                                                        ($type($value) = "object" ? 
+                                                            {$key: $replace_B3Event_Body_Header($value)} : 
+                                                            {$key: $value}
+                                                        )
+                                                    );
+                                                    $result;
+                                                )}))
+                                          };
+
+              $replace_path_Refs_MonitoringEvent_Cleared := function($node) {
+                                                            $merge($each($node, function($value, $key) {(
+                                                                  $result := (
+                                                                      $key = "$ref" and $value = "#/definitions/Header_Type" ? 
+                                                                          {"$ref": "#/components/schemas/Monitoring_Header_Type"} :
+                                                                      ($key = "$ref" and $value = "#/definitions/Body_Type" ? 
+                                                                          {"$ref": "#/components/schemas/Monitoring_Body_Type"} :
+                                                                      ($type($value) = "object" ? 
+                                                                          {$key: $replace_path_Refs_MonitoringEvent_Cleared($value)} : 
+                                                                          {$key: $value}
+                                                                      ))
+                                                                  );
+                                                                  $result;
+                                                              )}))
+                                                        };
+              $replace_path_Refs_MonitoringEvent := function($node) {
+                                              $merge($each($node, function($value, $key) {(
+                                                    $result := (       
+                                                        ($key = "$ref" and $value = "#/definitions/MonitoringObject_Type" ? 
+                                                            {"$ref": "#/components/schemas/MonitoringObject_Type"} :
+                                                        ($key = "$ref" and $value = "#/definitions/MonitoringDataList_Type" ? 
+                                                            {"$ref": "#/components/schemas/MonitoringDataList_Type"} :
+                                                        ($key = "$ref" and $value = "#/definitions/MonitoringMetricList_Type" ? 
+                                                            {"$ref": "#/components/schemas/MonitoringMetricList_Type"} :
+                                                        ($key = "$ref" and $value = "#/definitions/MonitoringMetricInfoList_Type" ? 
+                                                            {"$ref": "#/components/schemas/MonitoringMetricInfoList_Type"} :
+                                                        ($key = "$ref" and $value = "#/definitions/MonitoringThresholdList_Type" ? 
+                                                            {"$ref": "#/components/schemas/MonitoringThresholdList_Type"} :
+                                                        ($key = "$ref" and $value = "#/definitions/Threshold_Type" ? 
+                                                            {"$ref": "#/components/schemas/Threshold_Type"} :
+                                                        ($key = "$ref" and $value = "#/definitions/BaselineDeviation_Type" ? 
+                                                            {"$ref": "#/components/schemas/BaselineDeviation_Type"} :
+                                                        ($key = "BBB_ID_Type" ? 
+                                                            {"Monitoring_BBB_ID_Type": $value} :
+
+                                                        ($type($value) = "object" ? 
+                                                            {$key: $replace_path_Refs_MonitoringEvent($value)} : 
+                                                            {$key: $value}
+                                                        )))))))))
+                                                    );
+                                                    $result;
+                                                )}))
+                                          };
+              $replace_Monitoring_Event_Body_Header := function($node) {
+                          $merge($each($node, function($value, $key) {(
+                                $result := (          
+                                    $key = "Header_Type"  ? 
+                          {"Monitoring_Header_Type":$value} :
+                                    $key = "Body_Type"  ? 
+                          {"Monitoring_Body_Type":$value} :
+                                    ($type($value) = "object" ? 
+                                        {$key: $replace_Monitoring_Event_Body_Header($value)} : 
+                                        {$key: $value}
+                                    )
+                                );
+                                $result;
+                            )}))
+                      };
+
+
+              $replaceInDefs := function($node, $def) {        
+                  $merge($each($node, function($value, $key) {         
+                      $result := ($key = "components" and $type($value) = "object" and $value["schemas"]) ? 
+                          {$key: $replaceInDefs($value, $def)} :
+                          ($key = "schemas" ? 
+                              $def : 
+                              ($type($value) = "object" ? 
+                                  {$key: $replaceInDefs($value, $def)} : 
+                                  {$key: $value} 
+                              )         
+                          )
+                  }))
+              };
+
+            $convertSchemaValues := function($node) {
+              $merge($each($node, function($value, $key) {(
+                    $result := ($key = "$ref" and $value = "#/definitions/BBB_ID_Type" and $node.description = "Код BBB-источника события"
+                         ) ? 
+                    {"const": $params.id} :
+                    ($key = "$ref" and $value = "#/definitions/Scenario_ID_Type" and $node.description = "Код бизнес-сценария, запущенного в BBB, в рамках определенного типа процесса" and $lookup(base.automated_capability,$params.id).scenarios.id != ""
+                     ) ?
+                        {"enum": $lookup(base.automated_capability,$params.id).scenarios.id} :
+                    ($key = "type" and  $node.description = "Тип объекта. Идентификатор уникальный в рамках текущего BBB." and $lookup(base.automated_capability,$params.id).business_entities.$keys() != ""
+                     ) ? 
+                        {"enum": $lookup(base.automated_capability,$params.id).business_entities.$keys()} :
+                    ($key = "oneOf" and  $node.description = "Тип события. Для activity - фиксированный набор событий, для business - произвольный."
+                     ) ?
+                         {"enum":$append($node.oneOf.enum,$filter($lookup(base.automated_capability,$params.id).business_api,function($v){($v.api_type = "business_event")}).id)} :
+                    ($key = "maxLength" and $node.description = "Тип объекта. Идентификатор уникальный в рамках текущего BBB.")  and $lookup(base.automated_capability,$params.id).business_entities.$keys() != "" ?
+                                {} :
+                                ($type($value) = "object" ? 
+                                    {$key: $convertSchemaValues($value)} : 
+                                    {$key: $value} 
+                                );
+                            )}))
+              };
+
+
+              $B3_cleared:= $replace_path_Refs_B3Event_Cleared($specs_B3Event);
+              $Monitoring_event_cleared:= $replace_path_Refs_MonitoringEvent_Cleared($specs_MonitoringEvent);
+
+
+              $definitionsB3Event:= $replace_path_Refs_B3Event($specs_definitions_B3Event);
+              $endB3Event:= $replace_B3Event_Body_Header($definitionsB3Event);
+              $definitionsMonitoringEvent:= $replace_path_Refs_MonitoringEvent($specs_definitions_MonitoringEvent);
+              $endMonitoringEvent:= $replace_Monitoring_Event_Body_Header($definitionsMonitoringEvent);
+
+
+              $specs := {
+                  "schemas": $merge([
+                      {
+                          "B3Event": $B3_cleared
+                      },
+                      $endB3Event,
+                      {
+                          "MonitoringEvent": $Monitoring_event_cleared
+                      },
+                      $endMonitoringEvent,
+                      {
+                          "JournalEvent": $specs_JournalEvent
+                      }
+                  ])
+              };
+
+              $result := $replaceInDefs($result, $specs);
+
+              $result := $convertSchemaValues($result);
+
+              $result;
+            )
+
+      BBB_OpenAPI_presentation:
+        # Вывод описания API BBB
+        type: upload
+        title: Выгрузка OpenAPI спецификации BBB
+        params: # JSONSchema контроля параметров
+          type: object
+          properties:
+            id:
+              type: string
+          required:
+            - id
+        source: >
+          (          
+            $getBBBOpenAPIData($$, $params.id)
+          )
+
+      bbb_metamodel_plantuml:
+        type: plantuml
+        template: templates/bbb_metamodel.puml
+        source: >
+          (
+              $meta := entities.automated_capability.schema.patternProperties.*.properties;
+              $business := entities.automated_capability_business.schema.patternProperties.*.properties;
+              $required_business := entities.automated_capability_business.schema.patternProperties.*.required;
+              $defs := entities.automated_capability.schema."$defs";
+              $required := entities.automated_capability.schema.patternProperties.*.required;
+
+              $replaceInDefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                          $lookup($def, $substringAfter($value, "#/$defs/")) :
+                          ($type($value) = "object" ? {$key: $replaceInDefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $updated_defs := $replaceInDefs($defs, $defs);
+
+              $replaceRefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := 
+                          ($key = "$ref" and $contains($value, "#/$defs/scenario")) ? {"$ref": "[[/entities/automated_capability/bbb_metamodel_scenario_viz Ссылка на схему сценариев]]"} :
+                          ($key = "$ref" and $contains($value, "#/$defs/responsibles")) ? {"$ref": "[[/entities/automated_capability/bbb_metamodel_responsibles_viz Ссылка на схему ответственных за BBB]]"} :
+                          ($key = "$ref" and $contains($value, "#/$defs/business_api")) ? {"$ref": "[[/entities/automated_capability/bbb_metamodel_business_api_viz Ссылка на схему бизнес-API]]"} :
+                          ($key = "$ref" and $contains($value, "#/$defs/") and $not($contains($value, "#/$defs/business_api") or $contains($value, "#/$defs/scenario") or $contains($value, "#/$defs/responsibles"))) ? 
+                              $lookup($def, $substringAfter($value, "#/$defs/")) :
+                          ($type($value) = "object" ? {$key: $replaceRefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $final_schema := $replaceRefs($meta, $updated_defs);
+
+               $highlight := $merge($final_schema.$spread().($keys() in $required ? {"<:2705:>" & " " & $keys() : *} : $));
+               $highlight_business := $merge($business.$spread().($keys() in $required_business ? {"<:2705:>" & " " & $keys() : *} : $));
+               $required_business:= $highlight_business.**."required";
+
+               $addSymbolToRequired := function($node, $required_list){
+                   $merge($each($node, function($value, $key){
+                       $result := ($key in $required_list and $type($value)='object') ? {"<:2705:> " & $key: $value} :
+                           ($type($value) = "object" ? {$key: $addSymbolToRequired($value, $required_list)} : {$key: $value})
+                   }))
+               };
+               $final_highlight_business := $addSymbolToRequired($highlight_business, $required_business);
+               $merged_schemas := $merge([
+                   {"<b>" & "Базовые и архитектурные атрибуты" : $highlight, "<b>" & "Бизнес-атрибуты" : $final_highlight_business}
+               ]);
+
+
+
+               {
+                   "bbb_metamodel": $string($merged_schemas)
+               }
+          )
+
+      bbb_metamodel_plantuml_scenarios:
+        type: plantuml
+        template: templates/bbb_metamodel_scenarios.puml
+        source: >
+          (
+              $meta := entities.automated_capability.schema.patternProperties.*.properties;
+              $defs := entities.automated_capability.schema."$defs";
+              $required := entities.automated_capability.schema.patternProperties.*.required;
+
+              $replaceInDefs := function($node, $def){        
+                  $result := $type($node) = "object" ? $merge($each($node, function($value, $key){         
+                      $result := ($key = "$ref" and $value = "#/$defs/trigger_item") ? 
+                          {"$ref": "[[/entities/automated_capability/bbb_metamodel_scenario_triggers_viz Ссылка на схему триггеров сценария]]"} :
+                          ($key = "$ref" and $value = "#/$defs/integration") ? 
+                          {"$ref": "[[/entities/automated_capability/bbb_metamodel_scenario_integrations_viz Ссылка на схему интеграций сценария сценария]]"} :
+                          ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                          $lookup($def, $substringAfter($value, "#/$defs/")):
+                          ($type($value) = "object" ? {$key: $replaceInDefs($value, $def)} : 
+                          ($type($value) = "array" ? {$key: $map($value, function($item){ $replaceInDefs($item, $def) })} : 
+                          ($key in ["oneOf", "anyOf", "allOf", "items"] ? {$key: $map($value, function($item){ $replaceInDefs($item, $def) })} : 
+                          {$key: $value})))
+                  })) : $node
+              };
+
+              $updated_defs := $defs;
+              $updated_defs := $replaceInDefs($defs, $defs);
+
+
+              $replaceRefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := 
+                          ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                              $lookup($def, $substringAfter($value, "#/$defs/")) :         
+                          ($type($value) = "object" ? {$key: $replaceRefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $final_schema := $replaceRefs($meta, $updated_defs);
+
+              $highlight := $merge($final_schema.$spread().($keys() in $required ? {"<:2705:>" & " " & $keys() : *} : $));
+
+              $merged_schemas := $merge([
+                  {"<b>" & "Базовые и архитектурные атрибуты" : $highlight}
+              ]);
+
+              $required_scenarios:= $merged_schemas.*."<:2705:> scenarios".*.required;
+
+              $addSymbolToRequired := function($node, $required_list){
+                  $merge($each($node, function($value, $key){
+                      $result := ($key in $required_list and $type($value)='object') ? {"<:2705:> " & $key: $value} :
+                          ($type($value) = "object" ? {$key: $addSymbolToRequired($value, $required_list)} : {$key: $value})
+                  }))
+              };
+
+              $final_schema_with_symbol := $addSymbolToRequired($merged_schemas.*."<:2705:> scenarios", $required_scenarios);
+
+              {
+                  "bbb_metamodel": $string($final_schema_with_symbol)
+              }
+          )
+
+      bbb_metamodel_plantuml_scenarios_triggers:
+        type: plantuml
+        template: templates/bbb_metamodel_scenarios_triggers.puml
+        source: >
+          (
+              $meta := entities.automated_capability.schema.patternProperties.*.properties;
+              $defs := entities.automated_capability.schema."$defs";
+              $required := entities.automated_capability.schema.patternProperties.*.required;
+
+              $replaceInDefs := function($node, $def){        
+                  $result := $type($node) = "object" ? $merge($each($node, function($value, $key){         
+                      $result :=  ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                          $lookup($def, $substringAfter($value, "#/$defs/")):
+                          ($type($value) = "object" ? {$key: $replaceInDefs($value, $def)} : 
+                          ($type($value) = "array" ? {$key: $map($value, function($item){ $replaceInDefs($item, $def) })} : 
+                          ($key in ["oneOf", "anyOf", "allOf", "items"] ? {$key: $map($value, function($item){ $replaceInDefs($item, $def) })} : 
+                          {$key: $value})))
+                  })) : $node
+              };
+
+              $updated_defs := $defs;
+              $updated_defs := $replaceInDefs($updated_defs, $updated_defs);
+              $updated_defs := $replaceInDefs($updated_defs, $updated_defs);
+              $updated_defs := $replaceInDefs($updated_defs, $updated_defs);
+
+
+
+              $replaceRefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := 
+                          ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                              $lookup($def, $substringAfter($value, "#/$defs/")) :         
+                          ($type($value) = "object" ? {$key: $replaceRefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $final_schema := $replaceRefs($meta, $updated_defs);
+
+              $highlight := $merge($final_schema.$spread().($keys() in $required ? {"<:2705:>" & " " & $keys() : *} : $));
+
+              $merged_schemas := $merge([
+                  {"<b>" & "Базовые и архитектурные атрибуты" : $highlight}
+              ]);
+
+              {
+                  "bbb_metamodel": $string($merged_schemas.**."trigger_items")
+              }
+          )
+
+      bbb_metamodel_plantuml_scenarios_integrations:
+        type: plantuml
+        template: templates/bbb_metamodel_scenarios_integrations.puml
+        source: >
+          (
+              $meta := entities.automated_capability.schema.patternProperties.*.properties;
+              $defs := entities.automated_capability.schema."$defs";
+              $required := entities.automated_capability.schema.patternProperties.*.required;
+
+              $replaceInDefs := function($node, $def){        
+                  $result := $type($node) = "object" ? $merge($each($node, function($value, $key){         
+                      $result :=  ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                          $lookup($def, $substringAfter($value, "#/$defs/")):
+                          ($type($value) = "object" ? {$key: $replaceInDefs($value, $def)} : 
+                          ($type($value) = "array" ? {$key: $map($value, function($item){ $replaceInDefs($item, $def) })} : 
+                          ($key in ["oneOf", "anyOf", "allOf", "items"] ? {$key: $map($value, function($item){ $replaceInDefs($item, $def) })} : 
+                          {$key: $value})))
+                  })) : $node
+              };
+
+              $updated_defs := $defs;
+              $updated_defs := $replaceInDefs($updated_defs, $updated_defs);
+              $updated_defs := $replaceInDefs($updated_defs, $updated_defs);
+              $updated_defs := $replaceInDefs($updated_defs, $updated_defs);
+
+
+
+              $replaceRefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := 
+                          ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                              $lookup($def, $substringAfter($value, "#/$defs/")) :         
+                          ($type($value) = "object" ? {$key: $replaceRefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $final_schema := $replaceRefs($meta, $updated_defs);
+
+              $highlight := $merge($final_schema.$spread().($keys() in $required ? {"<:2705:>" & " " & $keys() : *} : $));
+
+              $merged_schemas := $merge([
+                  {"<b>" & "Базовые и архитектурные атрибуты" : $highlight}
+              ]);
+
+              {
+                  "bbb_metamodel": $string($merged_schemas.**."integrations_used")
+              }
+          )
+
+      bbb_metamodel_plantuml_business_api:
+        type: plantuml
+        template: templates/bbb_metamodel_business_api.puml
+        source: >
+          (
+              $meta := entities.automated_capability.schema.patternProperties.*.properties;
+              $defs := entities.automated_capability.schema."$defs";
+              $required := entities.automated_capability.schema.patternProperties.*.required;
+
+              $replaceInDefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                          $lookup($def, $substringAfter($value, "#/$defs/")) :
+                          ($type($value) = "object" ? {$key: $replaceInDefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $updated_defs := $replaceInDefs($defs, $defs);
+
+              $replaceRefs := function($node, $def){        
+                  $merge($each($node, function($value, $key){         
+                      $result := 
+                          ($key = "$ref" and $contains($value, "#/$defs/scenario")) ? {"$ref": "[[/entities/automated_capability/bbb_metamodel_scenario_viz Ссылка на схему сценариев]]"} :
+                          ($key = "$ref" and $contains($value, "#/$defs/") and $not($contains($value, "#/$defs/scenario"))) ? 
+                              $lookup($def, $substringAfter($value, "#/$defs/")) :
+                          ($type($value) = "object" ? {$key: $replaceRefs($value, $def)} : {$key: $value})         
+                  }))
+              };
+
+              $final_schema := $replaceRefs($meta, $updated_defs);
+
+              $highlight := $merge($final_schema.$spread().($keys() in $required ? {"<:2705:>" & " " & $keys() : *} : $));
+
+              $merged_schemas := $merge([
+                  {"<b>" & "Базовые и архитектурные атрибуты" : $highlight}
+              ]);
+              $required_bus_api:= $merged_schemas.*."<:2705:> business_api".*.required;
+
+              $addSymbolToRequired := function($node, $required_list){
+                  $merge($each($node, function($value, $key){
+                      $result := ($key in $required_list and $type($value)='object') ? {"<:2705:> " & $key: $value} :
+                          ($type($value) = "object" ? {$key: $addSymbolToRequired($value, $required_list)} : {$key: $value})
+                  }))
+              };
+
+              $final_schema_with_symbol := $addSymbolToRequired($merged_schemas, $required_bus_api);
+
+              {
+                  "bbb_metamodel": $string($final_schema_with_symbol.*."<:2705:> business_api")
+              }
+          )
+
+      bbb_metamodel_plantuml_responsibles:
+        type: plantuml
+        template: templates/bbb_metamodel_responsibles.puml
+        source: >
+          (
+                        $meta := entities.automated_capability.schema.patternProperties.*.properties;
+                        $defs := entities.automated_capability.schema."$defs";
+                        $required := entities.automated_capability.schema.patternProperties.*.required;
+
+                        $replaceInDefs := function($node, $def){        
+                            $merge($each($node, function($value, $key){         
+                                $result := ($key = "$ref" and $contains($value, "#/$defs/")) ? 
+                                    $lookup($def, $substringAfter($value, "#/$defs/")) :
+                                    ($type($value) = "object" ? {$key: $replaceInDefs($value, $def)} : {$key: $value})         
+                            }))
+                        };
+
+                        $updated_defs := $replaceInDefs($defs, $defs);
+
+                        $replaceRefs := function($node, $def){        
+                            $merge($each($node, function($value, $key){         
+                                $result := 
+                                    ($key = "$ref" and $contains($value, "#/$defs/scenario")) ? {"$ref": "[[/entities/automated_capability/bbb_metamodel_scenario_viz Ссылка на схему сценариев]]"} :
+                                    ($key = "$ref" and $contains($value, "#/$defs/business_api")) ? {"$ref": "[[/entities/automated_capability/bbb_metamodel_business_api_viz Ссылка на схему бизнес-API]]"} :
+                                    ($key = "$ref" and $contains($value, "#/$defs/") and $not($contains($value, "#/$defs/business_api") or $contains($value, "#/$defs/scenario"))) ? 
+                                        $lookup($def, $substringAfter($value, "#/$defs/")) :
+                                    ($type($value) = "object" ? {$key: $replaceRefs($value, $def)} : {$key: $value})         
+                            }))
+                        };
+
+                        $final_schema := $replaceRefs($meta, $updated_defs);
+
+                        $highlight := $merge($final_schema.$spread().($keys() in $required ? {"<:2705:>" & " " & $keys() : *} : $));
+
+                        $merged_schemas := $merge([
+                            {"<b>" & "Базовые и архитектурные атрибуты" : $highlight}
+                        ]);
+
+                        {
+                            "bbb_metamodel": $string($merged_schemas.*."responsibles")
+                        }
+                    )
+
+      bbb_topics_meta:
+        # Вывод описания API BBB
+        type: upload
+        title: Выгрузка детальной архитектуры топиков для МЕТА
+        params: # JSONSchema контроля параметров
+          type: object
+          properties:
+            id:
+              type: string
+          required:
+            - id
+        source: >
+          (          
+            $get_bbb_topics_meta($params.id)
+          )

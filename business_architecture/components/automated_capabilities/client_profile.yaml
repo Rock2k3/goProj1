@@ -1,0 +1,81 @@
+automated_capability:
+  CP:
+    title: Профиль клиента
+    owner_block: Химчистка
+    owner_tribe: Отдел обслуживания клиентов
+    description: 'Блок предназначен для управления данными клиента.'
+    status: Эксплуатация
+    responsibles:
+      owner: "3"
+      Methodologist: "3"
+      EAArchitect: "14"
+      solution_architector: "25"
+      development_team:
+        contactInfo:
+          - "CLS_team@ourLoundry.ru"
+        team_members:
+          - "36"
+      support_team:
+        IFT:
+          contactInfo:
+            - "CLS_team@ourLoundry.ru"
+          team_members:
+            - "47"
+        PSI:
+          contactInfo:
+            - "CLS_team@ourLoundry.ru"
+          team_members:
+            - "47"
+        PROM:
+          contactInfo:
+            - "CLS_team@ourLoundry.ru"
+          team_members:
+            - "47"
+    business_functions:
+      CLIENT_PROFILE_MANAGEMENT:
+        title: Управление профилем клиента
+        description: 'Функция отвечает за сбор, хранение и анализ данных о клиентах, включая историю заказов, предпочтения и контактную информацию, для улучшения обслуживания и персонализации предложений.'
+    business_entities:
+      CLIENT_PROFILE:
+        summary: Профиль клиента
+    scenarios:
+      - id: CLIENT_PROFILE_UPDATE
+        status: Эксплуатация
+        title: Обновление профиля клиента
+        children_scenario_allowed: false
+        business_function: CLIENT_PROFILE_MANAGEMENT
+        automated_level: auto
+        trigger_groups:
+          - group_name: Изменение профиля по запросу
+            trigger_items:
+              - type: API
+                api: CLIENT_PROFILE_CHANGE_REQUEST
+          - group_name: Изменение профиля по данным новой заявки
+            trigger_items:
+              - type: event
+                event:
+                  source: PP
+                  source_business_api: APPLICATION_SET
+                  description: Новая заявка
+        business_events_produced:
+          - CLIENT_PROFILE_UPDATE
+    business_api:
+      - id: CLIENT_PROFILE_UPDATE
+        api_type: business_event
+        title: Изменение профиля клиента
+        business_entity: CLIENT_PROFILE
+        status: Эксплуатация
+      - id: CLIENT_PROFILE_CHANGE_REQUEST
+        api_type: setter
+        title: Запрос на изменение профиля клиента
+        business_entity: CLIENT_PROFILE
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+      - id: CLIENT_PROFILE_DATA
+        api_type: getter
+        title: Получение данных профиля клиента
+        business_entity: CLIENT_PROFILE
+        schemaURL: https://petstore.swagger.io/
+        status: Эксплуатация
+    systems:
+      - CRSM

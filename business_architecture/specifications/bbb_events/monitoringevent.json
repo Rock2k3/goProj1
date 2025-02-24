@@ -1,0 +1,482 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "http://bbb.sber.ru/MonitoringEvent/1.2.1/root.json",
+  "description": "Сообщение",
+  "type": "object",
+  "properties": {
+    "header": {
+      "description": "Заголовок сообщения",
+      "$ref": "#/definitions/Header_Type"
+    },
+    "body": {
+      "description": "Тело сообщения",
+      "$ref": "#/definitions/Body_Type"
+    }
+  },
+  "required": [
+    "header",
+    "body"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "Header_Type": {
+      "description": "Заголовок сообщения",
+      "type": "object",
+      "properties": {
+        "evtType": {
+          "description": "Тип события",
+          "type": "string",
+          "maxLength": 20
+        },
+        "evtVersion": {
+          "description": "Версия схемы события",
+          "type": "string",
+          "pattern": "[0-9.]{1,5}"
+        },
+        "srcModule": {
+          "description": "Код BBB-источника события",
+          "$ref": "#/definitions/BBB_ID_Type"
+        },
+        "evtId": {
+          "description": "Уникальный идентификатор события",
+          "type": "string",
+          "format": "uuid"
+        },
+        "evtDate": {
+          "description": "Дата и время возникновения события",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32532753851
+        },
+        "sndDate": {
+          "description": "Дата и время отправки события источником",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32532753851
+        },
+        "parentId": {
+          "description": "Идентификатор события, повлекшего за собой возникновение данного события",
+          "type": "string",
+          "format": "uuid"
+        },
+        "prevEvtId": {
+          "description": "Идентификатор предыдущего события в потоке событий источника (для обнаружения gap'а)",
+          "type": "string",
+          "format": "uuid"
+        },
+        "itServiceCI": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^CI[0-9]{8}$",
+          "description": "ID КЭ ИТ-услуги, по которой собирается метрика"
+        }
+      },
+      "required": [
+        "evtVersion",
+        "srcModule",
+        "evtId",
+        "evtDate",
+        "sndDate",
+        "itServiceCI"
+      ],
+      "additionalProperties": false
+    },
+    "Body_Type": {
+      "description": "Тело сообщения",
+      "type": "object",
+      "properties": {
+        "monitoringObjects": {
+          "description": "Список объектов мониторинга",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "items": {
+            "description": "Объект мониторинга",
+            "$ref": "#/definitions/MonitoringObject_Type"
+          }
+        }
+      },
+      "required": [
+        "monitoringObjects"
+      ],
+      "additionalProperties": false
+    },
+    "MonitoringObject_Type": {
+      "description": "Объект мониторинга",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Тип объекта мониторинга, например - триггер или healthcheck",
+          "type": "string",
+          "maxLength": 100
+        },
+        "objectName": {
+          "description": "Наименование объекта мониторинга",
+          "type": "string",
+          "maxLength": 100
+        },
+        "monitoringDataList": {
+          "description": "Данные объекта мониторинга",
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "description": "Метрика",
+            "$ref": "#/definitions/MonitoringDataList_Type"
+          }
+        },
+        "monitoringMetricList": {
+          "description": "Данные по значениям метрик",
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "description": "Значение метрики",
+            "$ref": "#/definitions/MonitoringMetricList_Type"
+          }
+        },
+        "monitoringMetricInfoList": {
+          "description": "Метаданные по метрикам",
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "description": "Метаданные метрики",
+            "$ref": "#/definitions/MonitoringMetricInfoList_Type"
+          }
+        },
+        "monitoringThresholdList": {
+          "description": "Пороги для объекта мониторинга",
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "description": "Порог",
+            "$ref": "#/definitions/MonitoringThresholdList_Type"
+          }
+        },
+        "monitoringObjects": {
+          "description": "Список объектов мониторинга",
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "description": "Объект мониторинга",
+            "$ref": "#/definitions/MonitoringObject_Type"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "objectName"
+      ],
+      "additionalProperties": false
+    },
+    "MonitoringDataList_Type": {
+      "description": "Данные объекта мониторинга",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Наименование данных объекта мониторинга, например - Статус доступности сервиса",
+          "type": "string",
+          "maxLength": 100
+        },
+        "value": {
+          "description": "Значение данных объекта мониторинга, например - RUNNING",
+          "type": "string",
+          "maxLength": 500
+        },
+        "unit": {
+          "description": "Единица измерения",
+          "type": "string",
+          "maxLength": 20
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "MonitoringMetricList_Type": {
+      "description": "Данные по метрикам объекта мониторинга",
+      "type": "object",
+      "properties": {
+        "service": {
+          "description": "Наименование сервиса к которому относятся метрики",
+          "type": "string",
+          "maxLength": 128
+        },
+        "namespace": {
+          "description": "Namespace в котором расположен сервис",
+          "type": "string",
+          "maxLength": 500
+        },
+        "metricHash": {
+          "type": "string",
+          "description": "Уникальный идентификатор метрики, используемый как ее ключ для объединения все её данных на оперативном дашборде. Рассчитывается однократно, фиксируется и используется при любых передачах данных, метаданных и порогов метрики. Метод расчета - любая хэш-функция с приемлемым уровнем защиты от коллизий от набора значений полей: itServiceCI, mon_system_ci, objectId, metricId",
+          "maxLength": 128,
+          "pattern": "[a-f0-9]{32,128}"
+        },
+        "metricName": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Англоязычное наименование метрики,с которым метрика будет сохранена в VM"
+        },
+        "metricValue": {
+          "description": "Число с плавающей точкой, например 7.0",
+          "type": "number",
+          "minimum": -4503599627370496,
+          "maximum": 4503599627370496
+        },
+        "baselineValue": {
+          "description": "Значение базовой линии метрики, рассчитанное средствами системы мониторинга. Может не передаваться. Используется для интерпретации значения метрики в сочетании с порогами. ",
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": -4503599627370496,
+              "description": "Число с плавающей точкой, например 2.28",
+              "maximum": 4503599627370496
+            },
+            {
+              "type": "null",
+              "description": "... или null, если передача не производится"
+            }
+          ]
+        },
+        "metricTs": {
+          "type": "integer",
+          "description": "Unix timestamp в секундах c 01/01/1970 в UTC (без timezone), обозначающий момент времени, в который метрика и baseline имели значения, указанные в полях metric_value и baseline_value соответственно",
+          "minimum": 0,
+          "maximum": 3147483648
+        },
+        "metricStatus": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20,
+              "enum": ["normal", "warning", "high", "critical", "wide_ranging"]
+            },
+            {
+              "type": "null",
+              "description": "... или null, если передача не производится"
+            }
+          ],
+          "description": "Статус метрики, выраженный в виде enum от normal (норма) до wide_ranging (максимальное отклонение). Если признак на стороне источника не рассчитывается - передать null"
+        }
+      },
+      "required": [
+        "service",
+        "namespace",
+        "metricHash",
+        "metricName",
+        "metricValue",
+        "metricTs"
+      ],
+      "additionalProperties": false
+    },
+    "MonitoringMetricInfoList_Type": {
+      "description": "Информация по метрике",
+      "type": "object",
+      "properties": {
+        "metricHash": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "[a-f0-9]{32,128}",
+          "description": "Уникальный идентификатор метрики, используемый как ее ключ для объединения все её данных на оперативном дашборде. Рассчитывается однократно, фиксируется и используется при любых передачах данных, метаданных и порогов метрики. Метод расчета - любая хэш-функция с приемлемым уровнем защиты от коллизий от набора значений полей: itServiceCI, mon_system_ci, objectId, metricId."
+        },
+        "metricName": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Русскоязычное наименование метрики, например - Количество успешных запросов."
+        },
+        "metricDescription": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Описание метрики, характеризующее основные свойства метрики (что измеряется, о чем сигнализирует и т.п). Чем понятнее описание, тем легче определить причину отклонения и собрать правильные компетенции для его устранения."
+        },
+        "targetMetricType": {
+          "type": "string",
+          "description": "Тип метрики в соответствии со Стандартом технологического мониторинга, выбирается из списка допустимых значений",
+          "maxLength": 50,
+          "enum": [
+            "Availability",
+            "Errors",
+            "Latency",
+            "Other",
+            "Saturation",
+            "Traffic"
+          ]
+        },
+        "sourceMetricType": {
+          "type": "string",
+          "description": "Тип метрики из источника данных в соответствии с типами метрик Victoria Metrics.",
+          "maxLength": 50,
+          "enum": [
+            "Histogram",
+            "Gauge",
+            "Counter",
+            "Summary"
+          ]
+        },
+        "metricGroup": {
+          "type": "string",
+          "description": "Группа метрики в соответствии со Стандартом технологического мониторинга. Возможны два значения: Infra (метрики инфраструктурных продуктов) и App (любые другие).",
+          "maxLength": 50,
+          "enum": [
+            "App",
+            "Infra"
+          ]
+        },
+        "metricUnit": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Единица измерения метрики. Если применимо - рекомендуется использовать национальное кодовое обозначение единицы измерения метрики согласно Общероссийскому Классификатору Единиц Измерения (ОКЕИ, https://classifikators.ru/okei)."
+        },
+        "metricPeriodSec": {
+          "type": ["integer","null"],
+          "description": "Если применимо - интервал сбора данных метрики в целых секундах. Если неприменимо - передать null.",
+          "minimum": 1,
+          "maximum": 86400
+        }
+      },
+      "required": [
+        "metricHash",
+        "metricName",
+        "metricDescription",
+        "targetMetricType",
+        "sourceMetricType",
+        "metricGroup",
+        "metricUnit"
+      ],
+      "additionalProperties": false
+    },
+    "MonitoringThresholdList_Type": {
+      "description": "Пороги для объекта мониторинга",
+      "type": "object",
+      "properties": {
+        "metricHash": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "[a-f0-9]{32,128}",
+          "description": "Уникальный идентификатор метрики из метаданных метрики, используемый как ее ключ для объединения все её данных на оперативном дашборде."
+        },
+        "threshold": {
+          "description": "Информация по порогам",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": {
+            "description": "Порог",
+            "$ref": "#/definitions/Threshold_Type"
+          }
+        },
+        "combinationSelector": {
+          "type": "string",
+          "description": "Переключатель, определяющий способ выбора статуса метрики при попадании значения метрики в 2 и более диапазона. Если best - то берем наименьшую критичность, если worst (или параметр отсутствует) - наибольшую среди пересекающихся коридоров в которые попало значение метрики. Это применимо и к описанию пороговых значений (threshold), и к описанию отклонений от базовой линии (baseline_deviation)",
+          "enum": [
+            "best",
+            "worst"
+          ],
+          "maxLength": 20
+        },
+        "baselineDeviation": {
+          "description": "Информация по отклонениям базовой линии",
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": {
+            "description": "Отклонения базовой линии",
+            "$ref": "#/definitions/BaselineDeviation_Type"
+          }
+        },
+        "thresholdTs": {
+          "type": "integer",
+          "description": "Unix timestamp в секундах c 01/01/1970 в UTC (без timezone), обозначающий момент времени, в который значение порога, указанное в поле threshold или baselineDeviations вступило в силу. На оперативном дашборде всегда применяется ПОСЛЕДНИЙ ФАКТИЧЕСКИ полученный пакет с порогом, thresholdTs используется только для диагностики в случае сбоев.",
+          "minimum": 0,
+          "maximum": 3147483648
+        }
+      },
+      "required": [
+        "metricHash",
+        "threshold",
+        "combinationSelector",
+        "baselineDeviation",
+        "thresholdTs"
+      ],
+      "additionalProperties": false
+    },
+    "Threshold_Type": {
+      "description": "Порог",
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": ["number", "null"],
+          "description": "Нижняя граница. Может быть числом или null. В случае null интерпретируется как минус бесконечность",
+          "minimum": -1e+99,
+          "maximum": 1e+99
+        },
+        "max": {
+          "type": ["number", "null"],
+          "description": "Верхняя граница. Может быть числом или null. В случае null интерпретируется как плюс бесконечность.",
+          "minimum": -1e99,
+          "maximum": 1e+99
+        },
+        "status" : {
+          "type": "string",
+          "description":"Статус метрики",
+          "maxLength": 20,
+          "enum" : ["normal", "warning", "high", "critical", "wide_ranging"]
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "BaselineDeviation_Type": {
+      "description": "Отклонения базовой линии",
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": ["number", "null"],
+          "description": "Нижняя граница. Может быть числом или null. В случае null интерпретируется как минус бесконечность",
+          "minimum": -1e+99,
+          "maximum": 1e+99
+        },
+        "max": {
+          "type": ["number", "null"],
+          "description": "Верхняя граница. Может быть числом или null. В случае null интерпретируется как плюс бесконечность.",
+          "minimum": -1e99,
+          "maximum": 1e+99
+        },
+        "status" : {
+          "type": "string",
+          "description":"Статус метрики",
+          "maxLength": 20,
+          "enum" : ["normal", "warning", "high", "critical", "wide_ranging"]
+        },
+        "isPercent": {
+          "description" : "Признак того, что значения границ коридора переданы в виде процентов, а не абсолютного значения",
+          "type" : "boolean"
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "status",
+        "isPercent"
+      ],
+      "additionalProperties": false
+    },
+    "BBB_ID_Type": {
+      "description": "Код BBB",
+      "type": "string",
+      "pattern": "^[A-Z0-9_]{1,20}$",
+      "examples": [
+        "MONBLAN",
+        "AML",
+        "B3ECOSECVECTOR"
+      ]
+    }
+  }
+}
